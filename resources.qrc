@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>shaders/phong.frag</file>
+        <file>shaders/phong.vert</file>
+        <file>textures/diag.png</file>
+        <file>textures/diag-bump.png</file>
+        <file>shaders/light.frag</file>
+        <file>shaders/light.vert</file>
+        <file>textures/brickwall_normal.jpg</file>
+        <file>textures/brickwall.jpg</file>
+        <file>textures/case.png</file>
+        <file>textures/diag-height.png</file>
+        <file>textures/hole.png</file>
+    </qresource>
+</RCC>
