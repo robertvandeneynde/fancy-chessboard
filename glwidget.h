@@ -1,5 +1,5 @@
-#ifndef WINDOW_H
-#define WINDOW_H
+#ifndef GL_WIDGET_H
+#define GL_WIDGET_H
 
 #include "scene.h"
 
@@ -11,6 +11,8 @@
 
 // My version beign 5.2, there is no QOpenGLWidget
 #include <QGLWidget>
+
+#include <QMainWindow>
 
 class QOpenGLContext;
 
@@ -54,6 +56,8 @@ class MyGLDrawer : public QGLWidget
 public:
     MyGLDrawer(QWidget *parent = nullptr);
 
+    Scene* scene() { return mScene.data(); }
+
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;
@@ -79,4 +83,4 @@ public:
     QPointF lastPos;
 };
 
-#endif // WINDOW_H
+#endif // GL_WIDGET_H

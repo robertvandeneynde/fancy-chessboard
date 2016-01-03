@@ -1,16 +1,14 @@
 #include <QApplication>
-#include "window.h"
+#include "mainwindow.h"
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
 
-    MyGLDrawer w;
+    MainWindow w;
+    // MyGLDrawer w;
+    // Window w;
     w.show();
-    /*
-    Window w;
-    w.show();
-    */
 
     return a.exec();
 }

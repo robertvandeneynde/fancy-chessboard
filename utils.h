@@ -23,9 +23,14 @@ QVector2D polar(float length, float angleInRadians);
  * @brief return the unit vector in spherical coordinates
  * let v = spherical(fromUp, onGround)
  * let p = projection of v on xy
+ *
  * @param fromUp = angle between v and z. 0 means the +z vector
  * @param onGround = angle between x and p. 0 means on xz plane.
  * @return the unit vector of angles fromUp, onGround
+ *
+ * given definitions on https://en.wikipedia.org/wiki/Spherical_coordinate_system
+ * fromUp   = inclinaison angle = θ-physics = φ-maths
+ * onGround = azimutal angle    = φ-physics = θ-maths
  */
 QVector3D spherical(float fromUp, float onGround);
 
@@ -39,10 +44,10 @@ float radians(float degrees);
 float degrees(float radians);
 
 /**
- * @brief to3D(v,z) = (v.x, v.y, z)
+ * @brief vec3(v,z) = (v.x, v.y, z)
  * @return (v.x, v.y, z)
  */
-QVector3D to3D(QVector2D v, float z);
+QVector3D vec3(QVector2D v, float z);
 
 /**
  * @brief to2DYUp(v,y) = (v.x, z, v.y)
@@ -66,7 +71,7 @@ QVector4D vColorA(QColor c);
  * @brief 36 letters of 15-segment led display, 26 letters then 10 digits
  * @return 36 letters of 1 x 1 size, letter is a list of QVector2D to give to GL_LINES
  */
-QVector< QVector<QVector2D> > makeLetters();
+QVector<QVector<QVector2D>> makeLetters();
 
 
 /**
@@ -80,7 +85,7 @@ double positiveSin(double x);
 double frac(double x);
 
 /**
- * @brief continuous, 0 iff x is integer, up down linearly between 0 and 1, 1 iff x % 1 == 0.5
+ * @brief continuous, to [0,1], 0 iff x is integer, up down linearly between 0 and 1, 1 iff x % 1 == 0.5
  */
 double fracC(double x);
 
@@ -90,7 +95,7 @@ double fracC(double x);
 double linearAngle(double x);
 
 /**
- * @brief continuous, 0 iff x is integer, up down like abs sinus
+ * @brief continuous, to [0,1], 0 iff x is integer, up down like abs sinus
  */
 double absSinC(double x);
 

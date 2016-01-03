@@ -22,6 +22,10 @@ public:
     void applyDelta(QPointF delta);
     void applyZoom(float zoom); // +- 1
 
+    void setAngleFromUp(float angleFromUp) { this->angleFromUp = angleFromUp; }
+    void setAngleOnGround(float angleOnGround) { this->angleOnGround = angleOnGround; }
+    void setAngles(float angleFromUp, float angleOnGround) { this->angleFromUp = angleFromUp; this->angleOnGround = angleOnGround; }
+
     void paint(QPainter&);
 
 private:
@@ -35,7 +39,7 @@ private:
 
     QMatrix4x4 p, m, v;
     QVector3D camera, light;
-    float length = 3, theta = 0, phi = 0;
+    float length = 3, angleFromUp = 0, angleOnGround = 0; // theta is 2D angle, phi is 3D
 
     void prepareShaderProgram();
     void prepareVertexBuffers();

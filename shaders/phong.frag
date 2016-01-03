@@ -42,5 +42,6 @@ void main()
 
     color = mat3(ambiant, diffuse, specular) * factors;
     color *= constColor;
+    color = outColor;
     // color = constColor;
 }

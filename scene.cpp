@@ -24,17 +24,17 @@ static const QVector<QVector<QVector2D>> letters = makeLetters();
 
 Scene::Scene()
     : mShaderProgram(),
+      mShaderProgramLight(),
       mVertexPositionBuffer(QOpenGLBuffer::VertexBuffer),
       mVertexColorBuffer(QOpenGLBuffer::VertexBuffer)
 {
-    theta = radians(75);
-    phi = radians(45 + 180);
+
 }
 
 void Scene::initialize()
 {
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
 
     triangles.reset(new QOpenGLTexture(QImage(":/textures/diag.png"))); // brickwall.jpg
     bump.reset(new QOpenGLTexture(QImage(":/textures/diag-bump.png"))); // brickwall_normal.jpg
@@ -51,10 +51,10 @@ void Scene::update(double t)
 {
     const double speed1 = 10.0; // s / tour
     const double speed2 = 15.0; // s / tour
-    // double theta = M_PI * sinC(t / speed1); // rad
-    // double phi = (t / speed2) * (2 * M_PI); // rad
-    camera = spherical(length, theta, phi);
-    light = to3D(1 * polar(linearAngle(t / 15)), 1);
+    // theta = M_PI * sinC(t / speed1); // rad
+    // angleOnGround = (t / speed2) * (2 * M_PI); // rad
+    camera = spherical(length, angleFromUp, angleOnGround);
+    light = vec3(1 * polar(linearAngle(t / 15)), 1);
 
     m.setToIdentity();
     m.lookAt(camera, {0, 0, 0}, {0, 0, 1});
@@ -155,30 +155,31 @@ void Scene::resize(int width, int height)
 }
 
 void Scene::applyDelta(QPointF delta) {
-    phi += delta.x() * 0.01;
-    theta = (theta + delta.y() * 0.01);
+    angleOnGround += delta.x() * 0.01;
+    angleFromUp += delta.y() * 0.01;
 }
 
 void Scene::prepareShaderProgram()
 {
-    if (!mShaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/phong.vert"))
-        qCritical() << "error";
+    // add shader, calls init to generate program id (glGenProgram(&programId))
+    // create the shader (glCreateShader(&shaderId, type))
+    // then attach the shader (glAttachShader(programId, shaderId)
 
-    if (!mShaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/phong.frag"))
-        qCritical() << "error";
+    bool ok = true;
+    ok &= mShaderProgram.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/phong.vert");
+    ok &= mShaderProgram.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/phong.frag");
+    ok &= mShaderProgram.link(); // glLinkProgram(programId)
 
-    if (!mShaderProgram.link())
-        qCritical() << "error";
+    if(! ok)
+        qCritical() << "error in base shader" << endl;
 
-    if (!mShaderProgramLight.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/light.vert"))
-        qCritical() << "error";
+    ok = true;
+    ok &= mShaderProgramLight.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/light.vert");
+    ok &= mShaderProgramLight.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/light.frag");
+    ok &= mShaderProgram.link();
 
-    if (!mShaderProgramLight.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/light.frag"))
-        qCritical() << "error";
-
-    if (!mShaderProgram.link())
-        qCritical() << "error";
-
+    if(! ok)
+        qCritical() << "error in light shader";
 
     glCheckError();
 }
@@ -213,15 +214,16 @@ void Scene::prepareVertexBuffers()
     mVAO.create(); // glGenVertexArrays(1, &vao)
     mVAO.bind(); // glBindVertexArray(vao)
 
-    mVertexPositionBuffer.create();
+    mVertexPositionBuffer.create(); // glGenBuffers(1, &id);
     mVertexPositionBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
-    mVertexPositionBuffer.bind();
-    mVertexPositionBuffer.allocate(positionData, 3 * 4 * 3 * sizeof(float));
+    mVertexPositionBuffer.bind(); // glBindBuffer(type, id); // type = (VertexBuffer = default) | (IndexBuffer) | (PixelPackBuffer) | (PixelUnpackBuffer) = GL_ARRAY_BUFFER | GL_ELEMENT_ARRAY_BUFFER | GL_PIXEL_PACK_BUFFER | GL_PIXEL_UNPACK_BUFFER
+
+    mVertexPositionBuffer.allocate(positionData, sizeof(positionData)); // glBufferData(TYPE, count, data, USAGE);
 
     mVertexColorBuffer.create();
     mVertexColorBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
     mVertexColorBuffer.bind();
-    mVertexColorBuffer.allocate(colorData, 3 * 4 * 3 * sizeof(float));
+    mVertexColorBuffer.allocate(colorData, sizeof(colorData));
 
     mVertexCoordBuffer.create();
     mVertexCoordBuffer.setUsagePattern(QOpenGLBuffer::StaticDraw);
@@ -233,15 +235,19 @@ void Scene::prepareVertexBuffers()
     mVertexNormalBuffer.bind();
     mVertexNormalBuffer.allocate(normalsData, sizeof(normalsData));
 
-    mShaderProgram.bind();
+    mShaderProgram.bind(); // glUseProgram(&id) // use shader program
 
-    mVertexPositionBuffer.bind();
-    mShaderProgram.enableAttributeArray("vertexPosition");
-    mShaderProgram.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);
+    mVertexPositionBuffer.bind(); // glBindBuffer(type, id); in shader program
+    mShaderProgram.enableAttributeArray("vertexPosition"); // glEnableVertexAttribArray(location(name))
+    mShaderProgram.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3); // glVertexAttribPointer(...)
+
+    // setAttributeBuffer(location, type, offset, tupleSize, stride)
+    // = glVertexAttribPointer(location, tupleSize, type, GL_TRUE, stride, reinterpret_cast<const void *>(offset));
+    // GL_TRUE means normalized, see https://www.opengl.org/sdk/docs/man/html/glVertexAttribPointer.xhtml
 
     mVertexNormalBuffer.bind();
-    mShaderProgram.enableAttributeArray("vertexNormal"); // glEnableVertexAttribArray
-    mShaderProgram.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3); // glVertexAttribPointer
+    mShaderProgram.enableAttributeArray("vertexNormal");
+    mShaderProgram.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3);
 
     mVertexColorBuffer.bind();
     mShaderProgram.enableAttributeArray("vertexColor");

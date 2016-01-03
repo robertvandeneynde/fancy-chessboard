@@ -17,17 +17,20 @@ QT += widgets
 TARGET = FancyChessBoard
 TEMPLATE = app
 
-
 SOURCES += main.cpp \
-    window.cpp \
     utils.cpp \
-    scene.cpp
+    scene.cpp \
+    glwidget.cpp \
+    mainwindow.cpp \
+    customwidgets.cpp
 
 HEADERS += \
-    window.h \
     glassert.h \
     utils.h \
-    scene.h
+    scene.h \
+    glwidget.h \
+    mainwindow.h \
+    customwidgets.h
 
 OTHER_FILES += \
     shaders/* \
@@ -37,3 +40,6 @@ OTHER_FILES += \
 
 RESOURCES += \
     resources.qrc
+
+FORMS += \
+    mainwindow.ui

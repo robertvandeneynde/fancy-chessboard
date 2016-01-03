@@ -30,7 +30,7 @@ float degrees(float radians) {
     return qRadiansToDegrees(radians);
 }
 
-QVector3D to3D(QVector2D v, float z) {
+QVector3D vec3(QVector2D v, float z) {
     return {v.x(), v.y(), z};
 }
 

@@ -1,4 +1,4 @@
-#include "window.h"
+#include "glwidget.h"
 
 #include "scene.h"
 #include "glassert.h"
@@ -116,6 +116,7 @@ void MyGLDrawer::printContextInfos() {
     std::cout << "Context format version is: "
               << mContext->format().majorVersion()
               << "." << mContext->format().minorVersion() << std::endl;
+    makeCurrent();
     infoGL();
 }
 
