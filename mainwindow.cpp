@@ -8,26 +8,35 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->toUpLabel->saveFormat();
-    ui->onGroundLabel->saveFormat();
 
+    QSlider* sliders[] = {ui->onGround, ui->toUp, ui->lightSpeed};
+    FormatLabel* labels[] = {ui->onGroundLabel, ui->toUpLabel, ui->lightSpeedLabel};
+
+    for(FormatLabel* label : labels)
+        label->saveFormat();
+
+    // link ui and scene
+    scene()->setLightSpeed(ui->lightSpeed->value() / 60.0);
+    connect(ui->lightSpeed, &QSlider::valueChanged, [this](int x){
+        scene()->setLightSpeed(x / 60.0);
+    });
+
+    scene()->setAngleFromUp(radians(ui->toUp->value()));
     connect(ui->toUp, &QSlider::valueChanged, [this](int x) {
-        ui->toUpLabel->format(x);
         scene()->setAngleFromUp(radians(x));
     });
 
+    scene()->setAngleOnGround(radians(ui->onGround->value()));
     connect(ui->onGround, &QSlider::valueChanged, [this](int x) {
-        ui->onGroundLabel->format(x);
         scene()->setAngleOnGround(radians(x));
     });
 
-    QSlider* sliders[] = {ui->onGround, ui->toUp};
-    IntFormatLabel* labels[] = {ui->onGroundLabel, ui->toUpLabel};
-
-    for(int i = 0; i < 2; i++)
-        labels[i]->format(sliders[i]->value());
-
-    scene()->setAngles(radians(ui->toUp->value()), radians(ui->onGround->value()));
+    auto it = labels;
+    for(QSlider* slider : sliders) {
+        FormatLabel* label = *it++;
+        label->formatInt(slider->value());
+        connect(slider, &QSlider::valueChanged, label, &FormatLabel::formatInt);
+    }
 }
 
 MainWindow::~MainWindow()

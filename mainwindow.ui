@@ -71,7 +71,7 @@
         <enum>QLayout::SetNoConstraint</enum>
        </property>
        <item>
-        <widget class="IntFormatLabel" name="toUpLabel">
+        <widget class="FormatLabel" name="toUpLabel">
          <property name="text">
           <string>toUp-θ = %1°</string>
          </property>
@@ -94,7 +94,7 @@
         </widget>
        </item>
        <item>
-        <widget class="IntFormatLabel" name="onGroundLabel">
+        <widget class="FormatLabel" name="onGroundLabel">
          <property name="text">
           <string>onGround-φ = %1°</string>
          </property>
@@ -116,6 +116,35 @@
          </property>
          <property name="value">
           <number>225</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="FormatLabel" name="lightSpeedLabel">
+         <property name="text">
+          <string>light speed = %1rpm</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="lightSpeed">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>30</number>
+         </property>
+         <property name="value">
+          <number>15</number>
          </property>
          <property name="orientation">
           <enum>Qt::Horizontal</enum>
@@ -147,7 +176,7 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>IntFormatLabel</class>
+   <class>FormatLabel</class>
    <extends>QLabel</extends>
    <header>customwidgets.h</header>
   </customwidget>

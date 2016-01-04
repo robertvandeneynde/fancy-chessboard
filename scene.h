@@ -9,6 +9,8 @@
 #include <QColor>
 #include <QPainter>
 
+#include "utils.h"
+
 class Scene
 {
 public:
@@ -19,27 +21,42 @@ public:
     void render();
     void resize(int width, int height);
 
-    void applyDelta(QPointF delta);
-    void applyZoom(float zoom); // +- 1
-
-    void setAngleFromUp(float angleFromUp) { this->angleFromUp = angleFromUp; }
-    void setAngleOnGround(float angleOnGround) { this->angleOnGround = angleOnGround; }
-    void setAngles(float angleFromUp, float angleOnGround) { this->angleFromUp = angleFromUp; this->angleOnGround = angleOnGround; }
-
     void paint(QPainter&);
 
+public slots:
+    void applyDelta(QPointF delta);
+    void applyMove(QPointF delta);
+    void applyZoom(float zoom); // +- 1
+
+public slots:
+    void setLength(float x) { length = 3; }
+    void setLightSpeed(float x) { lightSpeed = x; }
+    void setAngleFromUp(float angleFromUp) { this->angleFromUp = angleFromUp; }
+    void setAngleOnGround(float angleOnGround) { this->angleOnGround = angleOnGround; }
+
+public:
+    float getLength() const { return length; }
+    float getLightSpeed() const { return lightSpeed; }
+    float getAngleFromUp() const { return angleFromUp; }
+    float getAngleOnGround() const { return angleOnGround; }
+
 private:
-    QOpenGLShaderProgram mShaderProgram, mShaderProgramLight;
-    QOpenGLVertexArrayObject mVAO;
-    QOpenGLBuffer mVertexPositionBuffer;
-    QOpenGLBuffer mVertexNormalBuffer;
-    QOpenGLBuffer mVertexColorBuffer;
-    QOpenGLBuffer mVertexCoordBuffer;
+    float length = 3;
+    float angleFromUp = radians(60);
+    float angleOnGround = radians(225); // theta is 2D angle, phi is 3D
+
+    float lightSpeed = 0.2; // turns / second
+
+private:
+    QOpenGLShaderProgram mShaderProgram, mShaderProgramLamp;
+    QOpenGLVertexArrayObject mVAO, mVAOLight;
+    QOpenGLBuffer mVertexPositionBuffer, mVertexNormalBuffer, mVertexColorBuffer, mVertexCoordBuffer,
+                  lampCubeBuffer;
+
     QScopedPointer<QOpenGLTexture> triangles, bump;
 
-    QMatrix4x4 p, m, v;
-    QVector3D camera, light;
-    float length = 3, angleFromUp = 0, angleOnGround = 0; // theta is 2D angle, phi is 3D
+    QMatrix4x4 p, m;
+    QVector3D camera, dep, light;
 
     void prepareShaderProgram();
     void prepareVertexBuffers();

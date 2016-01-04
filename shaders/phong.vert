@@ -11,7 +11,7 @@ out vec3 position;
 out vec3 outNormal;
 
 uniform mat4 matrix;
-uniform mat4 normMatrix;
+uniform mat3 normMatrix;
 
 void main()
 {
@@ -20,5 +20,5 @@ void main()
     outNormal = vertexNormal;
     position = vertexPosition;
     gl_Position = matrix * vec4(vertexPosition, 1.0); // proj * model * pos
-    normal = mat3(normMatrix) * vertexNormal;
+    normal = normMatrix * vertexNormal;
 }

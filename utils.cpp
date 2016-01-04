@@ -30,6 +30,10 @@ float degrees(float radians) {
     return qRadiansToDegrees(radians);
 }
 
+QVector3D vec3(float x, float y, float z) {
+    return {x, y, z};
+}
+
 QVector3D vec3(QVector2D v, float z) {
     return {v.x(), v.y(), z};
 }
@@ -140,4 +144,8 @@ double absSinC(double x) {
 
 double sinC(double x) {
     return positiveSin(x * 2 * M_PI);
+}
+
+QVector3D cross(QVector3D a, QVector3D b) {
+    return QVector3D::crossProduct(a,b);
 }

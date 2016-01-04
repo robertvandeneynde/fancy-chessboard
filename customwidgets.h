@@ -3,21 +3,22 @@
 
 #include <QLabel>
 
-class IntFormatLabel : public QLabel
+class FormatLabel : public QLabel
 {
+    // Q_OBJECT
+
 public:
-    IntFormatLabel(QWidget* parent = 0) : QLabel(parent) {}
+    FormatLabel(QWidget* parent) : QLabel(parent) {}
 
-    void saveFormat() {
-        myFormat = text();
-    }
+    void setFormat(QString s) { myFormat = s; }
+    void saveFormat() { setFormat(text()); }
 
-    void format(int x) {
-        setText(myFormat.arg(x));
-    }
+public:
+    void formatInt(int value);
 
 private:
     QString myFormat;
 };
+
 
 #endif // CUSTOMWIDGETS_H

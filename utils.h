@@ -7,6 +7,8 @@
 #include <QColor>
 #include <QVector>
 
+#include <algorithm>
+
 /**
  * @brief polar(a) = (cos(a), sin(a))
  * @return (cos(a), sin(a))
@@ -44,6 +46,11 @@ float radians(float degrees);
 float degrees(float radians);
 
 /**
+ * @return (x, y, z)
+ */
+QVector3D vec3(float x, float y, float z);
+
+/**
  * @brief vec3(v,z) = (v.x, v.y, z)
  * @return (v.x, v.y, z)
  */
@@ -66,6 +73,11 @@ QVector3D vColor(QColor c);
  * @return c.rgb
  */
 QVector4D vColorA(QColor c);
+
+/**
+ * @brief cross product
+ */
+QVector3D cross(QVector3D a, QVector3D b);
 
 /**
  * @brief 36 letters of 15-segment led display, 26 letters then 10 digits
@@ -103,5 +115,15 @@ double absSinC(double x);
  * @brief continuous, 0 iff x is integer, up down like sinus, continuous derivative
  */
 double sinC(double x);
+
+template <typename T>
+T clamp(T x, T m, T M) {
+    return std::min(std::max(x, m), M);
+}
+
+template <typename T>
+T clamp(T x, std::pair<T,T> interv) {
+    return clamp(x, interv.first, interv.second);
+}
 
 #endif // UTILS_H

@@ -43,3 +43,8 @@ RESOURCES += \
 
 FORMS += \
     mainwindow.ui
+
+QMAKE_CXXFLAGS += \
+    -Wno-unused-variable \
+    -Wno-unused-parameter
+
