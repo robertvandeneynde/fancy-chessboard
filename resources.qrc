@@ -13,5 +13,7 @@
         <file>textures/hole.png</file>
         <file>models/chess.obj</file>
         <file>models/chess.mtl</file>
+        <file>shaders/chess.frag</file>
+        <file>shaders/chess.vert</file>
     </qresource>
 </RCC>

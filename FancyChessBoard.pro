@@ -38,7 +38,9 @@ OTHER_FILES += \
     shaders/* \
     images/* \
     shaders/light.frag \
-    shaders/light.vert
+    shaders/light.vert \
+    shaders/chess.frag \
+    shaders/chess.vert
 
 RESOURCES += \
     resources.qrc

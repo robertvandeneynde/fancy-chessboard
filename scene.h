@@ -40,7 +40,7 @@ public:
     float lightInitPos = 0; // radians
 
 private:
-    QOpenGLShaderProgram programSurface, programLamp;
+    QOpenGLShaderProgram programSurface, programLamp, programChess;
     QOpenGLVertexArrayObject mVAO, mVAOLight, mVAOChess;
     QOpenGLBuffer mVertexPositionBuffer, mVertexNormalBuffer, mVertexColorBuffer, mVertexCoordBuffer,
                   lampCubeBuffer;

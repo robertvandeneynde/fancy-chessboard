@@ -12,8 +12,32 @@ OBJObject::OBJObject()
 
 }
 
+QVector3D OBJObject::boundingBoxMin() {
+    if(vertices.isEmpty())
+        return {};
+    QVector3D m = vertices.front();
+    for(QVector3D const& v : vertices) {
+        m[0] = std::min(m[0], v[0]);
+        m[1] = std::min(m[1], v[1]);
+        m[2] = std::min(m[2], v[2]);
+    }
+    return m;
+}
+
+QVector3D OBJObject::boundingBoxMax() {
+    if(vertices.isEmpty())
+        return {};
+    QVector3D m = vertices.front();
+    for(QVector3D const& v : vertices) {
+        m[0] = std::max(m[0], v[0]);
+        m[1] = std::max(m[1], v[1]);
+        m[2] = std::max(m[2], v[2]);
+    }
+    return m;
+}
+
 void OBJObject::loadBuffers() {
-    {
+    if(vertices.size()){
         auto& buf = bufferVertices;
         buf.create();
         buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
@@ -21,27 +45,48 @@ void OBJObject::loadBuffers() {
         buf.allocate(vertices.data(), vertices.size() * sizeof(QVector3D));
     }
 
-    {
+    if(triangles.size()) {
         auto& buf = bufferTriangles;
         buf.create();
         buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
         buf.bind();
         buf.allocate(triangles.data(), triangles.size() * sizeof(GLuint));
     }
-    {
+
+    if(quads.size()) {
         auto& buf = bufferQuads;
         buf.create();
         buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
         buf.bind();
         buf.allocate(quads.data(), quads.size() * sizeof(GLuint));
     }
+
+    if(normals.size()) {
+        auto& buf = bufferNormals;
+        buf.create();
+        buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        buf.bind();
+        buf.allocate(normals.data(), normals.size() * sizeof(QVector3D));
+    }
+
+    if(texCoord.size()) {
+        auto& buf = bufferTexCoord;
+        buf.create();
+        buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        buf.bind();
+        buf.allocate(texCoord.data(), texCoord.size() * sizeof(QVector2D));
+    }
 }
 
 void OBJObject::draw() {
-    bufferTriangles.bind();
-    glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, 0);
-    bufferQuads.bind();
-    glDrawElements(GL_QUADS, 4 * quads.size(), GL_UNSIGNED_INT, 0);
+    if(triangles.length()) {
+        bufferTriangles.bind();
+        glDrawElements(GL_TRIANGLES, 3 * triangles.size(), GL_UNSIGNED_INT, 0);
+    }
+    if(quads.length()) {
+        bufferQuads.bind();
+        glDrawElements(GL_QUADS, 4 * quads.size(), GL_UNSIGNED_INT, 0);
+    }
 }
 
 
@@ -61,28 +106,37 @@ void OBJLoader::load(QString filename)
         if(parts.isEmpty()) {
 
         }
-        else if(parts[0] == "v") {
-            if(parts.length() == 4) {
+        else if(parts[0] == "v" || parts[0] == "vn" | parts[0] == "vt") {
+            int M = parts[0] == "vt" ? 2 : 3;
+            if(parts.length() == M+1) {
                 bool ok = true;
 
                 QVector3D vec;
-                for(int i = 0; i < 3; i++) {
+                for(int i = 0; i < M; i++) {
                     bool o;
                     vec[i] = parts[i+1].toFloat(&o);
                     ok &= o;
                 }
 
                 if(ok) {
-                    object->vertices.push_back(vec);
+                    if(parts[0] == "v")
+                        object->vertices.push_back(vec);
+                    else if(parts[0] == "vn")
+                        object->normals.push_back(vec);
+                    else
+                        object->texCoord.push_back({vec.x(), vec.y()});
                     skipped = false;
                 }
             }
-            else if(parts.length() == 7) {
-                // with color3f
-            } else if(parts.length() == 8) {
-                // with color4f
-            }
+            /*
+             * if parts[0] == "v":
+             *  Colors parts.length() == 7 : color3f
+             *  Colors parts.length() == 8 : color4f
+             */
         } else if(parts[0] == "vn") {
+            if(parts.length() == 4) {
+                bool ok = true;
+            }
 
         } else if(parts[0] == "vt") {
 
@@ -160,7 +214,7 @@ void OBJLoader::load(QString filename)
             }
         }
 
-        if(skipped && parts.length() && (parts[0] == "f" || parts[1] == "f")) {
+        if(skipped && parts.length()) {
             qDebug() << "Skipping " << line;
         }
     }

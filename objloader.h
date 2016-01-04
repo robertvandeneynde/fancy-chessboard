@@ -4,6 +4,7 @@
 #include "GL/gl.h"
 
 #include <QVector>
+#include <QVector2D>
 #include <QVector3D>
 #include <QMap>
 #include <QString>
@@ -14,54 +15,42 @@
 
 struct OBJObject {
     QVector<QVector3D> vertices; // any size
+    QVector<QVector3D> normals;
+    QVector<QVector2D> texCoord;
     QVector<GLuint> triangles; // triangles.size() % 3 == 0
     QVector<GLuint> quads; // quads.size() % 4 == 0
 
-    QOpenGLVertexArrayObject VAO;
-
     QOpenGLBuffer bufferVertices;
+    QOpenGLBuffer bufferNormals;
+    QOpenGLBuffer bufferTexCoord;
     QOpenGLBuffer bufferTriangles;
     QOpenGLBuffer bufferQuads;
 
 public:
     OBJObject();
 
-    QVector3D boundingBoxMin() {
-        if(vertices.isEmpty())
-            return {};
-        QVector3D m = vertices.front();
-        for(QVector3D const& v : vertices) {
-            m[0] = std::min(m[0], v[0]);
-            m[1] = std::min(m[1], v[1]);
-            m[2] = std::min(m[2], v[2]);
-        }
-        return m;
+    struct Geometry {
+        QVector3D min, max;
+        QVector3D center, size;
+    } geom;
+
+    void calculateGeometry() {
+        geom.min = boundingBoxMin();
+        geom.max = boundingBoxMax();
+        geom.center = 0.5 * (geom.max + geom.min);
+        geom.size = geom.max - geom.min;
     }
 
-    QVector3D boundingBoxMax() {
-        if(vertices.isEmpty())
-            return {};
-        QVector3D m = vertices.front();
-        for(QVector3D const& v : vertices) {
-            m[0] = std::max(m[0], v[0]);
-            m[1] = std::max(m[1], v[1]);
-            m[2] = std::max(m[2], v[2]);
-        }
-        return m;
-    }
+private:
+    QVector3D boundingBoxMin();
+    QVector3D boundingBoxMax();
 
-    /**
-     * @brief loadBuffers
-     * must be in vao
-     */
+public:
     void loadBuffers();
-
-    /**
-     * @brief call bind and glDrawElements
-     */
     void draw();
 };
 
+// only work with (1 g, 2 ... n with negative)
 struct OBJLoader {
     QMap<QString, OBJObject*> objects;
 

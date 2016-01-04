@@ -26,10 +26,8 @@
 static const QVector<QVector<QVector2D>> letters = makeLetters();
 
 Scene::Scene()
-    : programSurface(),
-      programLamp(),
-      mVertexPositionBuffer(QOpenGLBuffer::VertexBuffer),
-      mVertexColorBuffer(QOpenGLBuffer::VertexBuffer)
+    : mVertexPositionBuffer(QOpenGLBuffer::VertexBuffer)
+    , mVertexColorBuffer(QOpenGLBuffer::VertexBuffer)
 {
     length = 3;
     angleFromUp = radians(60);
@@ -111,7 +109,7 @@ void Scene::render()
         // grid and lamp
         {
             prog.setUniformValue("matrix", pv);
-            glDrawArrays(GL_LINES, 6 * 3 * 4, 21 * 4);
+            glDrawArrays(GL_LINES, 6 * 3 * 4, 9 * 4);
 
             QMatrix4x4 m;
 
@@ -125,28 +123,28 @@ void Scene::render()
 
     // chess
     {
-        auto& prog = programLamp;
+        auto& prog = programChess;
+        prog.bind();
         mVAOChess.bind();
-        /*
+
         QMatrix4x4 m;
-        for(OBJObject* obj : chess.objects.values()) {
-            m.translate(2,0,0);
-            QMatrix4x4 l;
-            l.scale(1/200.0);
-            prog.setUniformValue("matrix", pv * m * l);
-            glDrawElements(GL_TRIANGLES, obj->triangles.size(), GL_UNSIGNED_INT, obj->triangles.data());
+        m.translate(0.5, 0.5);
+        m.translate(2, -10, 0);
+        for(OBJObject* obj : chess.objects) {
+            m.translate(0, 1, 0);
+            m.rotate(10, 0, 0, 1);
+
+            prog.setUniformValue("model", m);
+            prog.setUniformValue("matrix", pv * m);
+            prog.setUniformValue("normalMatrix", QMatrix3x3()); // m.normalMatrix());
+            prog.setUniformValue("light", light);
+
+            obj->bufferVertices.bind();
+            prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3); // glVertexAttribPointer(...) // one vertexPosition is 3 floats with offset 0, (stride 0)
+            obj->bufferNormals.bind();
+            prog.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3);
+            obj->draw();
         }
-        */
-        OBJObject* obj = chess.objects["RE2"];
-        QMatrix4x4 m;
-        m.scale(1/200.0);
-
-        auto A = obj->boundingBoxMin(), B = obj->boundingBoxMax();
-        m.translate((A + B) / -2);
-        m.translate(0, 0, (B.z() - A.z()) / 2);
-        prog.setUniformValue("matrix", pv * m);
-
-        obj->draw();
     }
 }
 
@@ -181,14 +179,14 @@ void Scene::prepareShaderProgram()
 
     // surface
     {
-        bool ok = true;
         auto& prog = programSurface;
+        bool ok = true;
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/phong.vert");
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/phong.frag");
         ok &= prog.link(); // glLinkProgram(programId)
 
         if(! ok)
-            qCritical() << "error in base shader" << endl;
+            qCritical() << "error in surface shader" << prog.log(), exit(1);
     }
 
     // lamp
@@ -200,7 +198,19 @@ void Scene::prepareShaderProgram()
         ok &= prog.link();
 
         if(! ok)
-            qCritical() << "error in light shader" << prog.log();
+            qCritical() << "error in light shader" << prog.log(), exit(1);
+    }
+
+    // chess
+    {
+        auto& prog = programChess;
+        bool ok = true;
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/chess.vert");
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/chess.frag");
+        ok &= prog.link();
+
+        if(! ok)
+            qCritical() << "error in chess shader" << prog.log(), exit(1);
     }
 
     glCheckError();
@@ -210,18 +220,26 @@ void Scene::prepareVertexBuffers()
 {
     chess.load(":/models/chess.obj");
 
-    /*
-    chess.objects["RE2"]->vertices = {{-1000, 1000, 0}, {-1000, 1100, 0}, {-800, 1100, 0}, {-800, 1000, 0}, {-800, 1000, 100}, {-800, 1100, 100}, {-900, 1050, 150}};
-    chess.objects["RE2"]->triangles = {0,1,2, 0,2,3, 2,3,4, 2,5,4, 4,5,6};
-    */
-
-    for(auto key : chess.objects.keys()) {
-        OBJObject* obj = chess.objects.value(key);
-        auto m = obj->boundingBoxMin();
-        auto M = obj->boundingBoxMax();
-        qDebug() << key << ":" << m << M << (m+M)/2 << (M-m) << obj->triangles.size();
+    for(OBJObject* obj : chess.objects) {
         for(QVector3D& v : obj->vertices)
             v = {v.x(), v.z(), v.y()};
+        for(QVector3D& v : obj->normals)
+            v = {v.x(), v.z(), v.y()};
+
+        obj->calculateGeometry();
+
+        for(QVector3D& v : obj->vertices) {
+            v += - obj->geom.center + vec3(0, 0, obj->geom.size.z() / 2);
+            v /= 200;
+        }
+        obj->calculateGeometry();
+    }
+
+    for(auto it = chess.objects.begin(); it != chess.objects.end(); ++it) {
+        OBJObject* obj = it.value();
+        auto& geom = obj->geom;
+        qDebug() << it.key() << ":" << "vtx:" << obj->vertices.size() << "center:" << geom.center << "size:" << geom.size << "tri:" << obj->triangles.size() << "quads:" << obj->quads.size()
+                 << "norm:" << obj->normals.size() << "texCoord:" << obj->texCoord.size();
     }
 
     QString names[6][2] = {{"TORRE1", "TORRE2"}, {"CAVALIERE1", "CAVALIERE2"}, {"ALFIERE1", "ALFIERE2"}, {"REGINA1", "REGINA2"}, {"RE1", "RE2"}, {"PEDONE1", "PEDONE2"}};
@@ -359,12 +377,12 @@ void Scene::prepareVertexBuffers()
             }
         }
 
-        QVector3D grids[21][4];
-        for(int i = 0; i < 21; i++) {
-            grids[i][0] = {i-10, -10, 0};
-            grids[i][1] = {i-10, +10, 0};
-            grids[i][2] = {-10, i-10, 0};
-            grids[i][3] = {+10, i-10, 0};
+        QVector3D grids[9][4];
+        for(int i = 0; i < 9; i++) {
+            grids[i][0] = {i-4, -4, 0};
+            grids[i][1] = {i-4, +4, 0};
+            grids[i][2] = {-4, i-4, 0};
+            grids[i][3] = {+4, i-4, 0};
         }
 
         auto& buf = lampCubeBuffer;
@@ -383,20 +401,17 @@ void Scene::prepareVertexBuffers()
 
     // chess
     {
-        auto& prog = programLamp;
+        auto& prog = programChess;
         prog.bind();
 
         mVAOChess.create();
         mVAOChess.bind();
 
-        /*
         for(OBJObject* obj : chess.objects.values())
             obj->loadBuffers();
-        */
-        chess.objects["RE2"]->loadBuffers();
 
         prog.enableAttributeArray("vertexPosition");
-        prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);
+        prog.enableAttributeArray("vertexNormal");
 
         mVAOChess.release();
     } // lamp
