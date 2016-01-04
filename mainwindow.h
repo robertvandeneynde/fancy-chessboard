@@ -21,7 +21,7 @@ private:
     Ui::MainWindow *ui;
 
 private:
-    Scene* scene();
+    Scene* getScene();
 };
 
 #endif // MAINWINDOW_H

@@ -14,41 +14,6 @@
 
 #include <QMainWindow>
 
-class QOpenGLContext;
-
-class Window : public QWindow
-{
-    Q_OBJECT
-public:
-    explicit Window(QScreen *screen = 0);
-    ~Window();
-    
-signals:
-    
-public slots:
-
-protected slots:
-    void resizeGl();
-    void paintGl();
-    void updateScene();
-
-protected:
-    void mouseMoveEvent(QMouseEvent * ev) override;
-    void mousePressEvent(QMouseEvent *ev) override;
-    void mouseReleaseEvent(QMouseEvent *ev) override;
-    void keyPressEvent(QKeyEvent *ev) override;
-    void wheelEvent(QWheelEvent *ev) override;
-
-private:
-    void initializeGl();
-    void printContextInfos();
-
-    QOpenGLContext *mContext;
-    QScopedPointer<Scene> mScene;
-    int tick = 0;
-    QPointF lastPos;
-};
-
 class MyGLDrawer : public QGLWidget
 {
     Q_OBJECT
@@ -56,7 +21,7 @@ class MyGLDrawer : public QGLWidget
 public:
     MyGLDrawer(QWidget *parent = nullptr);
 
-    Scene* scene() { return mScene.data(); }
+    Scene* getScene() { return scene.data(); }
 
 protected:
     void initializeGL() override;
@@ -77,10 +42,12 @@ protected:
 
     void paintEvent(QPaintEvent *) override;
 
-public:
-    QScopedPointer<Scene> mScene;
+private:
+    QScopedPointer<Scene> scene;
     int tick = 0;
-    QPointF lastPos;
+    QPointF lastPosL, lastPosR;
+
+    static void infoGL();
 };
 
 #endif // GL_WIDGET_H

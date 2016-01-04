@@ -57,7 +57,7 @@ void Scene::update(double t)
     const double speed2 = 15.0; // s / tour
     // theta = M_PI * sinC(t / speed1); // rad
     // angleOnGround = (t / speed2) * (2 * M_PI); // rad
-    camera = dep + spherical(length, angleFromUp, angleOnGround);
+    camera = spherical(length, angleFromUp, angleOnGround);
     light = vec3(1 * polar(linearAngle(t * lightSpeed)), 1);
 
     m.setToIdentity();
@@ -133,7 +133,7 @@ void Scene::applyDelta(QPointF delta) {
 }
 
 void Scene::applyMove(QPointF delta) {
-    dep += vec3(delta.x(), delta.y(), 0);
+    dep += 0.5 * vec3(delta.x(), delta.y(), 0);
 }
 
 void Scene::prepareShaderProgram()

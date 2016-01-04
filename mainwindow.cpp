@@ -16,19 +16,20 @@ MainWindow::MainWindow(QWidget *parent) :
         label->saveFormat();
 
     // link ui and scene
-    scene()->setLightSpeed(ui->lightSpeed->value() / 60.0);
-    connect(ui->lightSpeed, &QSlider::valueChanged, [this](int x){
-        scene()->setLightSpeed(x / 60.0);
+    Scene* scene = getScene();
+    scene->setLightSpeed(ui->lightSpeed->value() / 60.0);
+    connect(ui->lightSpeed, &QSlider::valueChanged, [scene](int x){
+        scene->setLightSpeed(x / 60.0);
     });
 
-    scene()->setAngleFromUp(radians(ui->toUp->value()));
-    connect(ui->toUp, &QSlider::valueChanged, [this](int x) {
-        scene()->setAngleFromUp(radians(x));
+    scene->setAngleFromUp(radians(ui->toUp->value()));
+    connect(ui->toUp, &QSlider::valueChanged, [scene](int x) {
+        scene->setAngleFromUp(radians(x));
     });
 
-    scene()->setAngleOnGround(radians(ui->onGround->value()));
-    connect(ui->onGround, &QSlider::valueChanged, [this](int x) {
-        scene()->setAngleOnGround(radians(x));
+    scene->setAngleOnGround(radians(ui->onGround->value()));
+    connect(ui->onGround, &QSlider::valueChanged, [scene](int x) {
+        scene->setAngleOnGround(radians(x));
     });
 
     auto it = labels;
@@ -44,6 +45,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-Scene *MainWindow::scene() {
-    return ui->gl->scene();
+Scene *MainWindow::getScene() {
+    return ui->gl->getScene();
 }
