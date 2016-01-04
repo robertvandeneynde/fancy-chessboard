@@ -32,14 +32,13 @@ void main()
     vec3 realColor = texture2D(diag, outCoord).rgb;
     // realColor = vec3(1,0,0); // outColor;
     vec3 L = normalize(light - position);
-    vec3 N = normMatrix * normalize(bumpColor); // take normal from bump map
-    // N = normMatrix * normalize(normal); // simply take normal
+    vec3 N = normalize(normMatrix * normalize(bumpColor)); // take normal from bump map
+    // N = normalize(normMatrix * normalize(normal)); // simply take normal
 
-    vec3 V = camera - position;
+    vec3 V = normalize(camera - position);
     vec3 R = normalize(2 * dot(L,N) * N - L);
 
-    float alpha = 64;
-    vec3 factors = vec3(0.1, 0.5, 0.0);
+    float alpha = 1024;
 
     vec3 ambiant = vec3(1,1,1);
     vec3 diffuseLightColor = vec3(1); // white
@@ -48,6 +47,6 @@ void main()
     vec3 diffuse = max(0, dot(L,N)) * diffuseLightColor;
     vec3 specular = pow(max(0, dot(R, V)), alpha) * specularLightColor;
 
-    color = (mat3(ambiant, diffuse, specular) * factors) * realColor;
+    color = (0.1 * ambiant + 0.5 * diffuse + 0.001 * specular) * realColor;
     // color = normalToColor(N);
 }

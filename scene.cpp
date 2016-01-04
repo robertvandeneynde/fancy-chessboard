@@ -57,11 +57,11 @@ void Scene::update(double t)
     const double speed2 = 15.0; // s / tour
     // theta = M_PI * sinC(t / speed1); // rad
     // angleOnGround = (t / speed2) * (2 * M_PI); // rad
-    camera = spherical(length, angleFromUp, angleOnGround);
-    light = vec3(1 * polar(linearAngle(t * lightSpeed)), 1);
+    camera = dep + length * spherical(angleFromUp, angleOnGround);
+    light = vec3(lightRadius * polar(lightInitPos + linearAngle(t * lightSpeed)), lightHeight);
 
     m.setToIdentity();
-    m.lookAt(camera, {0, 0, 0}, {0, 0, 1});
+    m.lookAt(camera, dep, {0, 0, 1});
 }
 
 void Scene::applyZoom(float zoom) {
@@ -105,11 +105,13 @@ void Scene::render()
 
         QMatrix4x4 v;
 
+        prog.setUniformValue("matrix", p * (m * v));
+        glDrawArrays(GL_LINES, 6 * 3 * 4, 20 * 4);
+
         v.translate(light);
         v.scale(0.1);
 
         prog.setUniformValue("matrix", p * (m * v));
-
         glDrawArrays(GL_QUADS, 0, 6 * 3 * 4);
     }
 }
@@ -133,7 +135,8 @@ void Scene::applyDelta(QPointF delta) {
 }
 
 void Scene::applyMove(QPointF delta) {
-    dep += 0.5 * vec3(delta.x(), delta.y(), 0);
+    delta = {-delta.y(), -delta.x()};
+    dep += 0.010 * vec3(QVector2D(delta).length() * polar(std::atan2(delta.y(), delta.x()) + angleOnGround), 0);
 }
 
 void Scene::prepareShaderProgram()
@@ -178,7 +181,7 @@ void Scene::prepareVertexBuffers()
 
         // position / normal
         {
-            QVector3D a = {0,0,0}, b = {0, 1, 0}, c = {1, 0, 0}, d = {0.5, 0.5, 1};
+            QVector3D a = {0,0,0}, b = {0, 1.5, 0}, c = {1, 0, 0}, d = {0.5, 0.5, 1};
 
             QVector3D P[4][3] = {
                 {d,b,c}, {a,b,c}, {a,c,d}, {a,d,b}
@@ -288,11 +291,21 @@ void Scene::prepareVertexBuffers()
             }
         }
 
+        QVector3D grids[20][4];
+        for(int i = 0; i < 20; i++) {
+            grids[i][0] = {i-10, -10, 0};
+            grids[i][1] = {i-10, +10, 0};
+            grids[i][2] = {-10, i-10, 0};
+            grids[i][3] = {+10, i-10, 0};
+        }
+
         auto& buf = lampCubeBuffer;
         buf.create();
         buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
         buf.bind();
-        buf.allocate(ds, sizeof(ds));
+        buf.allocate(sizeof(ds) + sizeof(grids));
+        buf.write(0, ds, sizeof(ds));
+        buf.write(sizeof(ds), grids, sizeof(grids));
 
         prog.enableAttributeArray("vertexPosition");
         prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);

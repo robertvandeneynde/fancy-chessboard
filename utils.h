@@ -22,6 +22,11 @@ QVector2D polar(float angleInRadians);
 QVector2D polar(float length, float angleInRadians);
 
 /**
+ * @return atan2(v.y, v.x)
+ */
+float angle2D(QVector2D v);
+
+/**
  * @brief return the unit vector in spherical coordinates
  * let v = spherical(fromUp, onGround)
  * let p = projection of v on xy

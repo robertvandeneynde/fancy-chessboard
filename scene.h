@@ -28,24 +28,15 @@ public slots:
     void applyMove(QPointF delta);
     void applyZoom(float zoom); // +- 1
 
-public slots:
-    void setLength(float x) { length = 3; }
-    void setLightSpeed(float x) { lightSpeed = x; }
-    void setAngleFromUp(float angleFromUp) { this->angleFromUp = angleFromUp; }
-    void setAngleOnGround(float angleOnGround) { this->angleOnGround = angleOnGround; }
-
 public:
-    float getLength() const { return length; }
-    float getLightSpeed() const { return lightSpeed; }
-    float getAngleFromUp() const { return angleFromUp; }
-    float getAngleOnGround() const { return angleOnGround; }
-
-private:
     float length = 3;
     float angleFromUp = radians(60);
     float angleOnGround = radians(225); // theta is 2D angle, phi is 3D
 
+    float lightHeight = 1;
+    float lightRadius = 1;
     float lightSpeed = 0.2; // turns / second
+    float lightInitPos = 0; // radians
 
 private:
     QOpenGLShaderProgram mShaderProgram, mShaderProgramLamp;

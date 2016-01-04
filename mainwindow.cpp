@@ -3,41 +3,66 @@
 
 #include "utils.h"
 
+#include <stdexcept>
+#include <QMessageBox>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    QSlider* sliders[] = {ui->onGround, ui->toUp, ui->lightSpeed};
-    FormatLabel* labels[] = {ui->onGroundLabel, ui->toUpLabel, ui->lightSpeedLabel};
+    QVector<QSlider*> sliders;
+    QVector<FormatLabel*> labels;
+
+    for(QObject* w : ui->sliders->children()) {
+        sliders.push_back(dynamic_cast<QSlider*>(w));
+        labels.push_back(dynamic_cast<FormatLabel*>(w));
+        if(! sliders.back())
+            sliders.pop_back();
+        if(! labels.back())
+            labels.pop_back();
+    }
 
     for(FormatLabel* label : labels)
         label->saveFormat();
 
+    if(sliders.size() != labels.size())
+        throw std::exception();
+
     // link ui and scene
+    auto map = [](float & value, QSlider* slider, float constant) {
+        value = slider->value() * constant;
+        connect(slider, &QSlider::valueChanged, [&value, constant](int x){
+            value = x * constant;
+        });
+    };
+
+    const float RPM = 1 / 60.0,
+                ANGLE = radians(1),
+                CM = 1/100.0;
+
     Scene* scene = getScene();
-    scene->setLightSpeed(ui->lightSpeed->value() / 60.0);
-    connect(ui->lightSpeed, &QSlider::valueChanged, [scene](int x){
-        scene->setLightSpeed(x / 60.0);
-    });
+    map(scene->lightHeight, ui->lightHeight, CM);
+    map(scene->lightRadius, ui->lightRadius, CM);
+    map(scene->lightSpeed, ui->lightSpeed, RPM);
+    map(scene->angleFromUp, ui->toUp, ANGLE);
+    map(scene->angleOnGround, ui->onGround, ANGLE);
+    map(scene->lightInitPos, ui->lightInitPos, ANGLE);
+    map(scene->length, ui->cameraR, CM);
 
-    scene->setAngleFromUp(radians(ui->toUp->value()));
-    connect(ui->toUp, &QSlider::valueChanged, [scene](int x) {
-        scene->setAngleFromUp(radians(x));
-    });
-
-    scene->setAngleOnGround(radians(ui->onGround->value()));
-    connect(ui->onGround, &QSlider::valueChanged, [scene](int x) {
-        scene->setAngleOnGround(radians(x));
-    });
-
-    auto it = labels;
+    auto it = labels.begin();
     for(QSlider* slider : sliders) {
         FormatLabel* label = *it++;
         label->formatInt(slider->value());
         connect(slider, &QSlider::valueChanged, label, &FormatLabel::formatInt);
     }
+
+    connect(ui->actionShow_help, &QAction::triggered, [](){
+        QMessageBox d;
+        d.setText("Hello");
+        d.exec();
+    });
 }
 
 MainWindow::~MainWindow()

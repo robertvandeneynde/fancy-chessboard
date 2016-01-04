@@ -30,6 +30,10 @@ float degrees(float radians) {
     return qRadiansToDegrees(radians);
 }
 
+float angle2D(QVector2D v) {
+    return std::atan2(v.y(), v.x());
+}
+
 QVector3D vec3(float x, float y, float z) {
     return {x, y, z};
 }
