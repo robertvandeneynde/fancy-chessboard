@@ -32,8 +32,8 @@ void main()
     vec3 realColor = texture2D(diag, outCoord).rgb;
     // realColor = vec3(1,0,0); // outColor;
     vec3 L = normalize(light - position);
-    vec3 N = normalize(normMatrix * normalize(bumpColor)); // take normal from bump map
-    // N = normalize(normMatrix * normalize(normal)); // simply take normal
+    vec3 N = normMatrix * normalize(bumpColor); // take normal from bump map
+    // N = normMatrix * normalize(normal); // simply take normal
 
     vec3 V = normalize(camera - position);
     vec3 R = normalize(2 * dot(L,N) * N - L);

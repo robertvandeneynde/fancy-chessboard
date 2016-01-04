@@ -18,7 +18,7 @@ void main()
     outColor = vertexColor;
     outCoord = vertexCoord;
     outNormal = vertexNormal;
-    position = vertexPosition;
-    gl_Position = matrix * vec4(vertexPosition, 1.0); // proj * model * pos
-    normal = normMatrix * vertexNormal;
+    position = vertexPosition; // model * vertexPosition
+    normal = vertexNormal;
+    gl_Position = matrix * vec4(vertexPosition, 1.0);
 }

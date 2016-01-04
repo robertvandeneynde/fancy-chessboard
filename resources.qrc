@@ -11,5 +11,7 @@
         <file>textures/case.png</file>
         <file>textures/diag-height.png</file>
         <file>textures/hole.png</file>
+        <file>models/chess.obj</file>
+        <file>models/chess.mtl</file>
     </qresource>
 </RCC>

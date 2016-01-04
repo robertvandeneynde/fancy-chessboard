@@ -10,6 +10,7 @@
 #include <QPainter>
 
 #include "utils.h"
+#include "objloader.h"
 
 class Scene
 {
@@ -39,14 +40,20 @@ public:
     float lightInitPos = 0; // radians
 
 private:
-    QOpenGLShaderProgram mShaderProgram, mShaderProgramLamp;
-    QOpenGLVertexArrayObject mVAO, mVAOLight;
+    QOpenGLShaderProgram programSurface, programLamp;
+    QOpenGLVertexArrayObject mVAO, mVAOLight, mVAOChess;
     QOpenGLBuffer mVertexPositionBuffer, mVertexNormalBuffer, mVertexColorBuffer, mVertexCoordBuffer,
                   lampCubeBuffer;
 
     QScopedPointer<QOpenGLTexture> triangles, bump;
 
-    QMatrix4x4 p, m;
+    struct ChessObj : public OBJLoader {
+        typedef OBJObject *O[2];
+        // by color
+        O queens, kings, towers, knights, bishops, pawns;
+    } chess;
+
+    QMatrix4x4 p, v;
     QVector3D camera, dep, light;
 
     void prepareShaderProgram();

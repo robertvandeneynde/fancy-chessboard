@@ -18,13 +18,16 @@
 #include "utils.h"
 
 #include <stdexcept>
+#include <fstream>
 #include <QRegularExpression>
+#include <QMap>
+#include <QFile>
 
 static const QVector<QVector<QVector2D>> letters = makeLetters();
 
 Scene::Scene()
-    : mShaderProgram(),
-      mShaderProgramLamp(),
+    : programSurface(),
+      programLamp(),
       mVertexPositionBuffer(QOpenGLBuffer::VertexBuffer),
       mVertexColorBuffer(QOpenGLBuffer::VertexBuffer)
 {
@@ -60,8 +63,8 @@ void Scene::update(double t)
     camera = dep + length * spherical(angleFromUp, angleOnGround);
     light = vec3(lightRadius * polar(lightInitPos + linearAngle(t * lightSpeed)), lightHeight);
 
-    m.setToIdentity();
-    m.lookAt(camera, dep, {0, 0, 1});
+    v.setToIdentity();
+    v.lookAt(camera, dep, {0, 0, 1});
 }
 
 void Scene::applyZoom(float zoom) {
@@ -72,18 +75,20 @@ void Scene::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    auto pv = p * v;
+
     // surface
     {
-        auto& prog = mShaderProgram;
-        QMatrix4x4 v;
+        auto& prog = programSurface;
+        QMatrix4x4 m;
         mVAO.bind(); // glBindVertexArray(vao)
         prog.bind();
 
         prog.setUniformValue("camera", camera);
         prog.setUniformValue("light", light);
 
-        prog.setUniformValue("matrix", p * (m * v));
-        prog.setUniformValue("normMatrix", v.normalMatrix()); // v.inverted().transposed());
+        prog.setUniformValue("matrix", pv * m);
+        prog.setUniformValue("normMatrix", m.normalMatrix()); // m.inverted().transposed());
 
         prog.setUniformValue("diag", 0); // texture unit 0
         prog.setUniformValue("bump", 1);
@@ -99,20 +104,49 @@ void Scene::render()
 
     // lamp
     {
-        auto& prog = mShaderProgramLamp;
-        mVAOLight.bind();
+        auto& prog = programLamp;
         prog.bind();
+        mVAOLight.bind();
 
-        QMatrix4x4 v;
+        // grid and lamp
+        {
+            prog.setUniformValue("matrix", pv);
+            glDrawArrays(GL_LINES, 6 * 3 * 4, 21 * 4);
 
-        prog.setUniformValue("matrix", p * (m * v));
-        glDrawArrays(GL_LINES, 6 * 3 * 4, 20 * 4);
+            QMatrix4x4 m;
 
-        v.translate(light);
-        v.scale(0.1);
+            m.translate(light);
+            m.scale(0.1);
 
-        prog.setUniformValue("matrix", p * (m * v));
-        glDrawArrays(GL_QUADS, 0, 6 * 3 * 4);
+            prog.setUniformValue("matrix", pv * m);
+            glDrawArrays(GL_QUADS, 0, 6 * 3 * 4);
+        }
+    }
+
+    // chess
+    {
+        auto& prog = programLamp;
+        mVAOChess.bind();
+        /*
+        QMatrix4x4 m;
+        for(OBJObject* obj : chess.objects.values()) {
+            m.translate(2,0,0);
+            QMatrix4x4 l;
+            l.scale(1/200.0);
+            prog.setUniformValue("matrix", pv * m * l);
+            glDrawElements(GL_TRIANGLES, obj->triangles.size(), GL_UNSIGNED_INT, obj->triangles.data());
+        }
+        */
+        OBJObject* obj = chess.objects["RE2"];
+        QMatrix4x4 m;
+        m.scale(1/200.0);
+
+        auto A = obj->boundingBoxMin(), B = obj->boundingBoxMax();
+        m.translate((A + B) / -2);
+        m.translate(0, 0, (B.z() - A.z()) / 2);
+        prog.setUniformValue("matrix", pv * m);
+
+        obj->draw();
     }
 }
 
@@ -148,7 +182,7 @@ void Scene::prepareShaderProgram()
     // surface
     {
         bool ok = true;
-        auto& prog = mShaderProgram;
+        auto& prog = programSurface;
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/phong.vert");
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/phong.frag");
         ok &= prog.link(); // glLinkProgram(programId)
@@ -159,7 +193,7 @@ void Scene::prepareShaderProgram()
 
     // lamp
     {
-        auto& prog = mShaderProgramLamp;
+        auto& prog = programLamp;
         bool ok = true;
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shaders/light.vert");
         ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shaders/light.frag");
@@ -174,6 +208,39 @@ void Scene::prepareShaderProgram()
 
 void Scene::prepareVertexBuffers()
 {
+    chess.load(":/models/chess.obj");
+
+    /*
+    chess.objects["RE2"]->vertices = {{-1000, 1000, 0}, {-1000, 1100, 0}, {-800, 1100, 0}, {-800, 1000, 0}, {-800, 1000, 100}, {-800, 1100, 100}, {-900, 1050, 150}};
+    chess.objects["RE2"]->triangles = {0,1,2, 0,2,3, 2,3,4, 2,5,4, 4,5,6};
+    */
+
+    for(auto key : chess.objects.keys()) {
+        OBJObject* obj = chess.objects.value(key);
+        auto m = obj->boundingBoxMin();
+        auto M = obj->boundingBoxMax();
+        qDebug() << key << ":" << m << M << (m+M)/2 << (M-m) << obj->triangles.size();
+        for(QVector3D& v : obj->vertices)
+            v = {v.x(), v.z(), v.y()};
+    }
+
+    QString names[6][2] = {{"TORRE1", "TORRE2"}, {"CAVALIERE1", "CAVALIERE2"}, {"ALFIERE1", "ALFIERE2"}, {"REGINA1", "REGINA2"}, {"RE1", "RE2"}, {"PEDONE1", "PEDONE2"}};
+
+    for(int i = 0; i < 6; i++)
+    for(int j = 0; j < 2; j++)
+        if(! chess.objects.contains(names[i][j]))
+            qCritical() << "Missing pieces", exit(1);
+
+    for(int i = 0; i < 2; i++) {
+        chess.towers[i] = chess.objects.value(names[0][i]);
+        chess.knights[i] = chess.objects.value(names[1][i]);
+        chess.bishops[i] = chess.objects.value(names[2][i]);
+        chess.queens[i] = chess.objects.value(names[3][i]);
+        chess.kings[i] = chess.objects.value(names[4][i]);
+        chess.pawns[i] = chess.objects.value(names[5][i]);
+    }
+
+
     // surface
     {
         mVAO.create(); // glGenVertexArrays(1, &vao)
@@ -238,7 +305,7 @@ void Scene::prepareVertexBuffers()
             buf.allocate(vtxCoordData, sizeof(vtxCoordData));
         }
 
-        auto& prog = mShaderProgram;
+        auto& prog = programSurface;
         prog.bind(); // glUseProgram(&id) // use shader program
 
         mVertexPositionBuffer.bind(); // glBindBuffer(type, id); in shader program
@@ -260,6 +327,7 @@ void Scene::prepareVertexBuffers()
         mVertexCoordBuffer.bind();
         prog.enableAttributeArray("vertexCoord");
         prog.setAttributeBuffer("vertexCoord", GL_FLOAT, 0, 2);
+        mVAO.release();
     } // surface
 
     // lamp
@@ -267,7 +335,7 @@ void Scene::prepareVertexBuffers()
         mVAOLight.create();
         mVAOLight.bind();
 
-        auto& prog = mShaderProgramLamp;
+        auto& prog = programLamp;
         prog.bind();
 
         /*
@@ -291,8 +359,8 @@ void Scene::prepareVertexBuffers()
             }
         }
 
-        QVector3D grids[20][4];
-        for(int i = 0; i < 20; i++) {
+        QVector3D grids[21][4];
+        for(int i = 0; i < 21; i++) {
             grids[i][0] = {i-10, -10, 0};
             grids[i][1] = {i-10, +10, 0};
             grids[i][2] = {-10, i-10, 0};
@@ -309,6 +377,28 @@ void Scene::prepareVertexBuffers()
 
         prog.enableAttributeArray("vertexPosition");
         prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);
+
+        mVAOLight.release();
+    }
+
+    // chess
+    {
+        auto& prog = programLamp;
+        prog.bind();
+
+        mVAOChess.create();
+        mVAOChess.bind();
+
+        /*
+        for(OBJObject* obj : chess.objects.values())
+            obj->loadBuffers();
+        */
+        chess.objects["RE2"]->loadBuffers();
+
+        prog.enableAttributeArray("vertexPosition");
+        prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3);
+
+        mVAOChess.release();
     } // lamp
 
     glCheckError();

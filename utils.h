@@ -9,6 +9,9 @@
 
 #include <algorithm>
 
+float radians(float degrees);
+float degrees(float radians);
+
 /**
  * @brief polar(a) = (cos(a), sin(a))
  * @return (cos(a), sin(a))
@@ -46,9 +49,6 @@ QVector3D spherical(float fromUp, float onGround);
  * @see spherical(float fromUp, float onGround)
  */
 QVector3D spherical(float length, float fromUp, float onGround);
-
-float radians(float degrees);
-float degrees(float radians);
 
 /**
  * @return (x, y, z)

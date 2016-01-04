@@ -4,6 +4,8 @@
 #include <QtMath>
 #include <QRegularExpression>
 
+#define M_TWO_PI 2 * M_PI
+
 QVector2D polar(float angleInRadians) {
     return {std::cos(angleInRadians), std::sin(angleInRadians)};
 }
