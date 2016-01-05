@@ -56,6 +56,7 @@ struct OBJLoader {
 
     void load(QString filename);
     void createBuffers();
+    virtual void onloaded() {}
 };
 
 #endif // OBJLOADER_H

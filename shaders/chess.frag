@@ -9,7 +9,7 @@ out vec3 color;
 
 void main()
 {
-    vec3 ambiant = vec3(0);
+    vec3 ambiant = vec3(1)/10.0;
 
     vec3 L = normalize(light - position);
     vec3 N = normalize(normal);

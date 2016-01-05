@@ -40,10 +40,12 @@ OTHER_FILES += \
     shaders/light.frag \
     shaders/light.vert \
     shaders/chess.frag \
-    shaders/chess.vert
+    shaders/chess.vert \
+    shaders/board.frag \
+    shaders/board.vert
 
-RESOURCES += \
-    resources.qrc
+# RESOURCES += \
+#     resources.qrc
 
 FORMS += \
     mainwindow.ui

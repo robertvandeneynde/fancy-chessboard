@@ -4,10 +4,14 @@
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+#include <QMatrix4x4>
 #include <QColor>
 #include <QVector>
 
 #include <algorithm>
+
+#define for_all(boolvari, cond, forexpr) boolvari = true; for(forexpr) if(!(cond)) { boolvari = false; break; }
+#define for_any(boolvari, cond, forexpr) boolvari = false; for(forexpr) if(cond) { boolvari = true; break; }
 
 float radians(float degrees);
 float degrees(float radians);
@@ -130,5 +134,34 @@ template <typename T>
 T clamp(T x, std::pair<T,T> interv) {
     return clamp(x, interv.first, interv.second);
 }
+
+struct Matrix : QMatrix4x4 {
+
+    Matrix& translate(float x, float y)                           { QMatrix4x4::translate(x,y);         return *this; }
+    Matrix& translate(float x, float y, float z)                  { QMatrix4x4::translate(x,y,z);       return *this; }
+    Matrix& translate(QVector2D v)                                { QMatrix4x4::translate(v.x(),v.y()); return *this; }
+    Matrix& translate(QVector3D v)                                { QMatrix4x4::translate(v);           return *this; }
+    Matrix& rotate(float angle, float x, float y, float z = 0.0f) { QMatrix4x4::rotate(angle,x,y,z);    return *this; }
+    Matrix& rotate(float angle, QVector3D axis = {0,0,1})         { QMatrix4x4::rotate(angle,axis);     return *this; }
+    Matrix& rotate(QQuaternion q)                                 { QMatrix4x4::rotate(q);              return *this; }
+    Matrix& scale(float r)                                        { QMatrix4x4::scale(r);               return *this; }
+    Matrix& scale(float x, float y)                               { QMatrix4x4::scale(x,y);             return *this; }
+    Matrix& scale(float x, float y, float z)                      { QMatrix4x4::scale(x,y,z);           return *this; }
+    Matrix& scale(QVector3D v)                                    { QMatrix4x4::scale(v);               return *this; }
+
+    Matrix translated(float x, float y) const                           { return copy().translate(x,y);         }
+    Matrix translated(float x, float y, float z) const                  { return copy().translate(x,y,z);       }
+    Matrix translated(QVector2D v) const                                { return copy().translate(v.x(),v.y()); }
+    Matrix translated(QVector3D v) const                                { return copy().translate(v);           }
+    Matrix rotated(float angle, float x, float y, float z = 0.0f) const { return copy().rotate(angle,x,y,z);    }
+    Matrix rotated(float angle, QVector3D axis = {0,0,1}) const         { return copy().rotate(angle,axis);     }
+    Matrix rotated(QQuaternion q) const                                 { return copy().rotate(q);              }
+    Matrix scaled(float r) const                                        { return copy().scale(r);               }
+    Matrix scaled(float x, float y) const                               { return copy().scale(x,y);             }
+    Matrix scaled(float x, float y, float z) const                      { return copy().scale(x,y,z);           }
+    Matrix scaled(QVector3D v) const                                    { return copy().scale(v);               }
+
+    Matrix copy() const { return *this; }
+};
 
 #endif // UTILS_H

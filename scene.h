@@ -8,6 +8,7 @@
 #include <QOpenGLTexture>
 #include <QColor>
 #include <QPainter>
+#include <QVector>
 
 #include "utils.h"
 #include "objloader.h"
@@ -40,18 +41,32 @@ public:
     float lightInitPos = 0; // radians
 
 private:
-    QOpenGLShaderProgram programSurface, programLamp, programChess;
-    QOpenGLVertexArrayObject mVAO, mVAOLight, mVAOChess;
-    QOpenGLBuffer mVertexPositionBuffer, mVertexNormalBuffer, mVertexColorBuffer, mVertexCoordBuffer,
-                  lampCubeBuffer;
+    QOpenGLShaderProgram surfProg, lightProg, chessProg, boardProg;
 
-    QScopedPointer<QOpenGLTexture> triangles, bump;
+    QOpenGLVertexArrayObject surfVAO, lightVAO, chessVAO, boardVAO;
+    QOpenGLBuffer
+        surfVertexBuf, surfNormalBuf, surfColorBuf, surfTexcoordBuf,
+        lampCubeBuf, boardVertexBuffer;
+
+    QScopedPointer<QOpenGLTexture>
+        texTriangles, texTriangleBump, texBoardNormalMap;
 
     struct ChessObj : public OBJLoader {
-        typedef OBJObject *O[2];
-        // by color
-        O queens, kings, towers, knights, bishops, pawns;
+        typedef OBJObject *OBJObjectPtr;
+        OBJObjectPtr queen, king, tower, knight, bishop, pawn;
+        QVector<OBJObjectPtr> beginOrder; // [8] // left to right, white
+
+        void onloaded() override;
     } chess;
+
+
+    struct ChessPiece {
+        OBJLoader* chessType;
+        QPoint position; // (0,0): A1; (1,0): B1;
+        int color; // 0 is white
+    };
+
+    QVector<ChessPiece> chessPieces; // size = 32
 
     QMatrix4x4 p, v;
     QVector3D camera, dep, light;

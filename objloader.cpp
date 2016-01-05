@@ -1,5 +1,7 @@
 #include "objloader.h"
 
+#include "utils.h"
+
 #include <QFile>
 #include <QDebug>
 #include <QRegularExpression>
@@ -172,12 +174,9 @@ void OBJLoader::load(QString filename)
                 if(sp.length()) {
                     int L = sp[0].length();
 
-                    bool ok = true;
-                    for(int i = 0; i < sp.length(); i++) {
-                        int l = sp[i].length();
-                        if(sp[i].length() != L)
-                            ok = false;
-                    }
+                    for_all(bool ok,
+                            sp[i].length() == L,
+                            int i = 0; i < sp.length(); i++)
 
                     if(ok) {
                         ok = true;
@@ -223,4 +222,6 @@ void OBJLoader::load(QString filename)
         delete objects[""];
         objects.remove("");
     }
+
+    onloaded();
 }

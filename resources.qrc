@@ -15,5 +15,8 @@
         <file>models/chess.mtl</file>
         <file>shaders/chess.frag</file>
         <file>shaders/chess.vert</file>
+        <file>shaders/board.frag</file>
+        <file>shaders/board.vert</file>
+        <file>models/chess-one.obj</file>
     </qresource>
 </RCC>
