@@ -2,6 +2,8 @@
 #define CUSTOMWIDGETS_H
 
 #include <QLabel>
+#include <QString>
+#include <functional>
 
 class FormatLabel : public QLabel {
     Q_OBJECT
@@ -11,11 +13,12 @@ public:
 
     void setFormat(QString s) { myFormat = s; }
     void saveFormat() { setFormat(text()); }
+    void setFunc(std::function<QString(QString,int)> f){ withFunc = true; func = f; }
 
 signals:
     void clicked();
 
-public:
+public slots:
     void formatInt(int value);
 
 protected:
@@ -23,6 +26,8 @@ protected:
 
 private:
     QString myFormat;
+    std::function<QString(QString,int)> func;
+    bool withFunc = false;
 };
 
 /*

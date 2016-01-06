@@ -4,7 +4,7 @@
 
 
 void FormatLabel::formatInt(int x) {
-    setText(myFormat.arg(x));
+    setText(withFunc ? func(myFormat, x) : myFormat.arg(x));
 }
 
 void FormatLabel::mousePressEvent(QMouseEvent *ev) {

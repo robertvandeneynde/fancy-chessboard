@@ -32,6 +32,8 @@ Scene::Scene()
     : surfVertexBuf(QOpenGLBuffer::VertexBuffer)
     , surfColorBuf(QOpenGLBuffer::VertexBuffer)
 {
+    anim.scene = this;
+    srand(89);
     lightColorsParam.scene = this;
     length = 3;
     angleFromUp = radians(60);
@@ -52,6 +54,19 @@ Scene::Scene()
 
     lights[1].pos = {4, 0, 0.5};
     lights[2].pos = {-4, 0, 0.5};
+}
+
+Scene::~Scene() {
+    for(ChessPiece* p : chessPieces)
+        delete p;
+}
+
+static QVector2D vec2(QPoint p) {
+    return {(float)p.x(), (float)p.y()};
+}
+
+static QVector2D vec2(QPointF p) {
+    return {p.x(), p.y()};
 }
 
 static QString F(QString s) {
@@ -101,6 +116,53 @@ void Scene::update(double t)
 
     v.setToIdentity();
     v.lookAt(camera, lookAt, {0, 0, 1});
+
+    if(t > timeEndKnightAnimation + movementWaiting && anim.state == anim.WAIT) {
+        // start anim
+        QList<ChessPiece*> myKnights = knights[rand() % 2];
+
+        QList<QList<QPoint>> possib;
+        QPoint ds[] = {{2,-1}, {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,2}};
+
+        for(ChessPiece* knight : myKnights) {
+            possib.push_back({});
+
+            for(QPoint d : ds) {
+                QPoint p = knight->position + d;
+                if(0 <= p.x() && p.x() < 8 && 0 <= p.y() && p.y() < 8) {
+                    bool blocked = false;
+                    for(ChessPiece* c : chessPieces)
+                        if(c->position == p) {
+                            blocked = true;
+                            break;
+                        }
+
+                    if(! blocked)
+                        possib.back() << p;
+                }
+            }
+        }
+
+        if(possib[0].length() || possib[1].length()) {
+            int n = possib[0].empty() || possib[0].length() && possib[1].length() && rand() % 2 ? 1 : 0;
+
+            anim.tstart = t;
+            anim.piece = myKnights[n];
+            anim.startTo(possib[n][rand() % possib[n].length()]);
+        } else {
+            qDebug() << "stuck !";
+            anim.state = anim.DONE;
+            anim.state = anim.WAIT;
+        }
+    }
+
+    if(anim.state == anim.RUN) {
+        anim.update(t);
+        if(anim.state == anim.DONE) {
+            timeEndKnightAnimation = t;
+            anim.state = anim.WAIT;
+        }
+    }
 }
 
 void Scene::applyZoom(float zoom) {
@@ -111,7 +173,31 @@ void Scene::render()
 {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+    const QVector3D A1Coord = vec3(-3.5, -3.5, 0);
+    const Matrix boardA1 = Matrix().translate(A1Coord);
+
+    QVector3D camera = this->camera;
+
+    auto X = vec3(1,0,0), Y = vec3(0,1,0), Z = vec3(0,0,1);
+
     auto pv = p * v;
+
+    if(onKnightAnim.isRunning && anim.piece) {
+        auto T = anim.bezier3Derivative().normalized();
+        auto R = anim.rightVector();
+        QMatrix4x4 vPrime;
+        auto e = A1Coord + anim.pos3D + 2 * Z;
+        auto d = vec3(T.toVector2D().normalized(), -1);
+        QMatrix4x4 dt;
+
+        dt.rotate(degrees(onKnightAnim.lookAround), Z);
+        // dt.rotate(5 * std::sin(2 * 2 * M_PI * anim.elapsed / anim.duration), Z);
+        dt.rotate(degrees(onKnightAnim.inclinaison), R);
+        d = dt.mapVector(d);
+        vPrime.lookAt(e, e + d, Z);
+        pv = p * vPrime;
+        camera = e;
+    }
 
     // surface
     for(;;){
@@ -165,8 +251,6 @@ void Scene::render()
         }
     }
 
-    const Matrix boardA1 = Matrix().translate(-0.5, -0.5).translate(-3, -3);
-
     // chess
     {
         auto& prog = chessProg;
@@ -177,29 +261,31 @@ void Scene::render()
         prog.setUniformValue("camera", camera);
         prog.setUniformValue("shininess", chessShininess);
 
-        for(int color = 0; color < 2; color++) {
-            prog.setUniformValue("color", color);
-            auto colorA1 = boardA1;
+        for(ChessPiece* p : chessPieces) {
+            auto m = boardA1;
+            auto obj = p->type;
 
-            if(color == 1)
-                colorA1.translate(7, 7).rotate(180);
+            if(anim.state == anim.RUN && anim.piece == p)
+                m.translate(anim.pos3D);
+            else
+                m.translate(vec2(p->position));
 
-            for(int row = 0; row < 2; row++) {
-                for(int i = 0; i < 8; i++) {
-                    auto m = colorA1.translated(i, row);
-                    OBJObject* obj = row == 0 ? chess.beginOrder[i] : chess.pawn;
+            if(anim.state == anim.RUN && anim.piece == p)
+                m.rotate(-90 + degrees(angle2D(vec2(anim.to - anim.fr))));
+            else
+                if(p->color == 1)
+                    m.rotate(180);
 
-                    prog.setUniformValue("model", m);
-                    prog.setUniformValue("matrix", pv * m);
-                    prog.setUniformValue("normalMatrix", m.normalMatrix());
+            prog.setUniformValue("color", p->color);
+            prog.setUniformValue("model", m);
+            prog.setUniformValue("matrix", pv * m);
+            prog.setUniformValue("normalMatrix", m.normalMatrix());
 
-                    obj->bufferVertices.bind();
-                    prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3); // glVertexAttribPointer(...) // one vertexPosition is 3 floats with offset 0, (stride 0)
-                    obj->bufferNormals.bind();
-                    prog.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3);
-                    obj->draw();
-                }
-            }
+            obj->bufferVertices.bind();
+            prog.setAttributeBuffer("vertexPosition", GL_FLOAT, 0, 3); // glVertexAttribPointer(...) // one vertexPosition is 3 floats with offset 0, (stride 0)
+            obj->bufferNormals.bind();
+            prog.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3);
+            obj->draw();
         }
     }
 
@@ -230,6 +316,36 @@ void Scene::render()
             }
         }
     }
+
+    // bezier
+    if(anim.state == anim.RUN) {
+        auto& prog = bezierProg;
+        prog.bind();
+        bezierVAO.bind();
+
+        auto m = boardA1;
+        prog.setUniformValue("degree", anim.type == anim.DEG3 ? 3 : 4);
+
+        float trail = 0.60f; // [0,1]
+        float b = anim.elapsed / anim.duration;
+        float a = max(0.f, b - trail);
+        auto R = anim.rightVector();
+
+        // 0 0 0, 0 0 3, 2 0 3, 2 0 0
+        prog.setUniformValueArray("P", anim.P, 4);
+        prog.setUniformValue("matrix", pv * m);
+        glDrawArrays(GL_LINE_STRIP, (int) (100 * a), (int) (100 * (b-a)));
+
+        m.translate(0.1 * R);
+
+        prog.setUniformValue("matrix", pv * m);
+        glDrawArrays(GL_LINE_STRIP, (int) (100 * a), (int) (100 * (b-a)));
+
+        m.translate(-0.2 * R);
+
+        prog.setUniformValue("matrix", pv * m);
+        glDrawArrays(GL_LINE_STRIP, (int) (100 * a), (int) (100 * (b-a)));
+    }
 }
 
 void Scene::paint(QPainter& p) {
@@ -246,8 +362,13 @@ void Scene::resize(int width, int height)
 }
 
 void Scene::applyDelta(QPointF delta) {
-    angleOnGround += delta.x() * 0.01;
-    angleFromUp = clamp<float>(angleFromUp + delta.y() * 0.01, radians(1), radians(179));
+    if(onKnightAnim.isRunning) {
+        onKnightAnim.lookAround += delta.x() * 0.01;
+        onKnightAnim.inclinaison += delta.y() * 0.01;
+    } else {
+        angleOnGround += delta.x() * 0.01;
+        angleFromUp = clamp<float>(angleFromUp + delta.y() * 0.01, radians(1), radians(179));
+    }
 }
 
 void Scene::applyMove(QPointF delta) {
@@ -315,6 +436,18 @@ void Scene::prepareShaderProgram()
             qCritical() << "error in board shader" << prog.log(), exit(1);
     }
 
+    // bezier
+    {
+        auto& prog = bezierProg;
+        bool ok = true;
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/bezier.vert"));
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/bezier.frag"));
+        ok &= prog.link();
+
+        if(! ok)
+            qCritical() << "error in bezier shader" << prog.log(), exit(1);
+    }
+
     glCheckError();
 }
 
@@ -364,6 +497,30 @@ void Scene::ChessObj::onloaded() {
 void Scene::prepareVertexBuffers()
 {
     chess.load(F(":/models/chess-one.obj"));
+
+    chessPieces.reserve(16);
+    for(int color = 0; color < 2; color++) {
+        for(int i = 0; i < 8; i++) {
+            chessPieces.append(new ChessPiece {
+                chess.beginOrder[i],
+                {i, color == 0 ? 0 : 7},
+                color
+            });
+        }
+
+        knights.append({
+            chessPieces[chessPieces.length() - 2],
+            chessPieces[chessPieces.length() - 7]
+        });
+
+        for(int i = 0; i < 8; i++) {
+            chessPieces.append(new ChessPiece {
+                chess.pawn,
+                {i, color == 0 ? 1 : 6},
+                color
+            });
+        }
+    }
 
     // surface
     {
@@ -567,5 +724,101 @@ void Scene::prepareVertexBuffers()
         vao.release();
     }
 
+    // bezier
+    {
+        float times[100];
+        for(int i = 0; i < 100; i++)
+            times[i] = i / 100.0;
+
+        auto& vao = bezierVAO;
+        auto& prog = bezierProg;
+
+        vao.create();
+        vao.bind();
+        prog.bind();
+
+        auto& buf = bezierPoints;
+
+        buf.create();
+        buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        buf.bind();
+        buf.allocate(times, sizeof(times));
+        prog.enableAttributeArray("t");
+        prog.setAttributeBuffer("t", GL_FLOAT, 0, 1);
+
+        vao.release();
+    }
+
     glCheckError();
+}
+
+QVector3D Scene::KnightAnimation::rightVector() {
+    return vec3(polar(angle2D(vec2(to - fr)) - M_PI/2), 0);
+}
+
+void Scene::KnightAnimation::startTo(QPoint target) {
+    state = RUN;
+    fr = piece->position;
+    to = target;
+    if(scene->onKnightAnim.isRunning)
+        scene->onKnightAnim.start();
+
+    if(type == DEG3) {
+        P[0] = vec3(vec2(fr), 0);
+        P[2] = vec3(vec2(to), 0);
+        P[1] = vec3((vec2(fr) + vec2(to)) * 0.5, height);
+    } else if(type == DEG4) {
+        P[0] = P[1] = vec3(vec2(fr), 0);
+        P[3] = P[2] = vec3(vec2(to), 0);
+        P[1][2] = P[2][2] = height;
+    }
+}
+
+void Scene::KnightAnimation::update(float tnow) {
+    elapsed = tnow - tstart;
+    bezier();
+    if(elapsed > duration) {
+        state = DONE;
+        piece->position = to;
+    }
+}
+
+void Scene::KnightAnimation::bezier() {
+    if(type == DEG3)
+        bezier3();
+    else if(type == DEG4)
+        bezier4();
+}
+
+QVector3D Scene::KnightAnimation::bezierDerivative() {
+    if(type == DEG3)
+        return bezier3Derivative();
+    else if(type == DEG4)
+        return bezier4Derivative();
+    return {};
+}
+
+void Scene::KnightAnimation::bezier3() {
+    float t = elapsed / duration;
+    float u = 1 - t;
+    pos3D = u*u*P[0] + 2*u*t * P[1] + t*t * P[2];
+}
+
+QVector3D Scene::KnightAnimation::bezier3Derivative() {
+    float t = elapsed / duration;
+    float u = 1 - t;
+    return 2*u * (P[1]-P[0]) + 2*t * (P[2]-P[1]);
+}
+
+void Scene::KnightAnimation::bezier4() {
+    float t = elapsed / duration;
+    float u = 1 - t;
+    float t2 = t*t, u2 = u*u;
+    pos3D = u*u2*P[0] + 3*u2*t * P[1] + 3*u*t2 * P[2] + t*t2 * P[3];
+}
+
+QVector3D Scene::KnightAnimation::bezier4Derivative() {
+    float t = elapsed / duration;
+    float u = 1 - t;
+    return 3*u*u*(P[1]-P[0]) + 6*u*t * (P[2]-P[1]) + 3*t*t * (P[3]-P[2]);
 }

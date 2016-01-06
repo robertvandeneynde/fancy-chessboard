@@ -120,7 +120,7 @@
          </layout>
         </widget>
        </item>
-       <item>
+       <item alignment="Qt::AlignHCenter">
         <widget class="QTabWidget" name="tabWidget">
          <property name="sizePolicy">
           <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -129,7 +129,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>2</number>
          </property>
          <widget class="QWidget" name="tab_1">
           <property name="sizePolicy">
@@ -146,8 +146,8 @@
             <rect>
              <x>0</x>
              <y>0</y>
-             <width>136</width>
-             <height>410</height>
+             <width>104</width>
+             <height>210</height>
             </rect>
            </property>
            <property name="maximumSize">
@@ -169,10 +169,10 @@
                <bool>true</bool>
               </property>
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Polar angle for camera&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Polar angle for camera, can be changed on the screen with the mouse: left button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>camera-θ = %1°</string>
+               <string>cam-θ = %1°</string>
               </property>
              </widget>
             </item>
@@ -195,10 +195,10 @@
             <item>
              <widget class="FormatLabel" name="onGroundLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera, can be changed on the screen with the mouse: left button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>camera-φ = %1°</string>
+               <string>cam-φ = %1°</string>
               </property>
              </widget>
             </item>
@@ -227,10 +227,10 @@
             <item alignment="Qt::AlignTop">
              <widget class="FormatLabel" name="cameraRLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera, can be changed on the screen with the mouse: middle button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>camera-r = %1 cm</string>
+               <string>cam-r = %1m</string>
               </property>
              </widget>
             </item>
@@ -243,19 +243,115 @@
                </sizepolicy>
               </property>
               <property name="minimum">
-               <number>0</number>
+               <number>1</number>
               </property>
               <property name="maximum">
-               <number>2000</number>
+               <number>200</number>
               </property>
               <property name="value">
-               <number>800</number>
+               <number>100</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
               </property>
              </widget>
             </item>
+            <item>
+             <widget class="FormatLabel" name="panXLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera, can be changed on the screen with the mouse: middle button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>pan-x = %1m</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="panX">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimum">
+               <number>-100</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="panYLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle for camera, can be changed on the screen with the mouse: middle button.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>pan-y = %1m</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="panY">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimum">
+               <number>-100</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_3">
+          <attribute name="title">
+           <string>2</string>
+          </attribute>
+          <widget class="QFrame" name="frame_3">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>120</width>
+             <height>309</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_4">
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
             <item>
              <widget class="FormatLabel" name="lightSpeedLabel">
               <property name="toolTip">
@@ -291,7 +387,7 @@
             <item>
              <widget class="FormatLabel" name="lightInitPosLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Poistion of light when t = 2 π k, compared to&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Azimutal angle of light when t = 2 π k&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>light-θ = %1°</string>
@@ -321,44 +417,12 @@
              </widget>
             </item>
             <item>
-             <widget class="FormatLabel" name="lightHeightLabel">
-              <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Height of light from the ground&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-              </property>
-              <property name="text">
-               <string>light h = %1 cm</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QSlider" name="lightHeight">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>1</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimum">
-               <number>-1000</number>
-              </property>
-              <property name="maximum">
-               <number>1000</number>
-              </property>
-              <property name="value">
-               <number>100</number>
-              </property>
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-             </widget>
-            </item>
-            <item>
              <widget class="FormatLabel" name="lightRadiusLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;let p = projection of ligh on ground, d = distance from p to 0,0,0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;distance from (projection of light on ground) to 0,0,0&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>light r = %1 cm</string>
+               <string>light r = %1 m</string>
               </property>
              </widget>
             </item>
@@ -374,10 +438,42 @@
                <number>1</number>
               </property>
               <property name="maximum">
-               <number>1000</number>
+               <number>100</number>
               </property>
               <property name="value">
+               <number>10</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="lightHeightLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Height of light from the ground&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>light h = %1 m</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="lightHeight">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+                <horstretch>1</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="minimum">
+               <number>-100</number>
+              </property>
+              <property name="maximum">
                <number>100</number>
+              </property>
+              <property name="value">
+               <number>10</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -445,7 +541,7 @@
             <item>
              <widget class="FormatLabel" name="shininessLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shiniess of the chess pieces&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shininess of the chess pieces&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>pieces-α = 2^%1</string>
@@ -482,16 +578,22 @@
            </sizepolicy>
           </property>
           <attribute name="title">
-           <string>2</string>
+           <string>3</string>
           </attribute>
           <widget class="QFrame" name="frame">
            <property name="geometry">
             <rect>
-             <x>10</x>
-             <y>10</y>
-             <width>124</width>
-             <height>52</height>
+             <x>0</x>
+             <y>0</y>
+             <width>112</width>
+             <height>170</height>
             </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
            </property>
            <property name="frameShape">
             <enum>QFrame::NoFrame</enum>
@@ -500,35 +602,119 @@
             <enum>QFrame::Raised</enum>
            </property>
            <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="leftMargin">
+            <property name="rightMargin">
              <number>0</number>
             </property>
-            <property name="rightMargin">
-             <number>7</number>
-            </property>
             <item>
-             <widget class="FormatLabel" name="helloLabel_2">
-              <property name="enabled">
-               <bool>true</bool>
-              </property>
+             <widget class="FormatLabel" name="animModeLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Polar angle for camera&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type of bezier curve&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
-               <string>stuff = %1</string>
+               <string>knight: %1-%2m</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QSlider" name="hello">
+             <widget class="QSlider" name="animMode">
               <property name="minimum">
                <number>1</number>
               </property>
               <property name="maximum">
-               <number>179</number>
+               <number>6</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
               </property>
               <property name="value">
-               <number>45</number>
+               <number>3</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="animDurationLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Duration of a movement&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>knight-Δt = %1s</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="animDuration">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>15</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="movementWaitingLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Time between two movements.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>knight-λ = %1s</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="movementWaiting">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>30</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="animOnKnightLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If &amp;gt; 0, when a knight moves, the camera will follow !&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>On knight = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="animOnKnight">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>1</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -537,6 +723,11 @@
             </item>
            </layout>
           </widget>
+         </widget>
+         <widget class="QWidget" name="tab_4">
+          <attribute name="title">
+           <string>4</string>
+          </attribute>
          </widget>
         </widget>
        </item>

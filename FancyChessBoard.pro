@@ -42,7 +42,9 @@ OTHER_FILES += \
     shaders/chess.frag \
     shaders/chess.vert \
     shaders/board.frag \
-    shaders/board.vert
+    shaders/board.vert \
+    shaders/bezier.frag \
+    shaders/bezier.vert
 
 # RESOURCES += \
 #     resources.qrc
