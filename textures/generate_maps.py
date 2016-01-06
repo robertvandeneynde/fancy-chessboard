@@ -80,11 +80,14 @@ print(normals)
 def normalToColor(N):
     return tuple(int((x + 1) * 255 // 2) for x in N)
 
-c = count(0)
+saveCounter = count(1)
 
 def save(final=False):
-    base = 'normal-map-d1={}-d2={}-zDir={}'.format(d1,d2,zDir)
-    im.save(base + ('-{}.png'.format(next(c)) if not final else '.png'))
+    if final:
+        im.save('normal-map&d1={}&d2={}&zDir={}.png'.format(d1,d2,zDir))
+        im.save('normal-map.png')
+    else:
+        im.save('normal-map-{}.png'.format(next(saveCounter)))
     
 for x,y in iterchain(starmap(product, [
     (R0, R5), (R4, R5), (R5, R0), (R5, R4), (R2, R2)]

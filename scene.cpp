@@ -32,18 +32,26 @@ Scene::Scene()
     : surfVertexBuf(QOpenGLBuffer::VertexBuffer)
     , surfColorBuf(QOpenGLBuffer::VertexBuffer)
 {
+    lightColorsParam.scene = this;
     length = 3;
     angleFromUp = radians(60);
     angleOnGround = radians(225); // theta is 2D angle, phi is 3D
 
     lightSpeed = 1; // seconds / turn
 
-    lights[0].color = vColor(Qt::white);
-    lights[1].color = vColor({0xcc, 0x33, 0x33});
-    lights[2].color = vColor({0x33, 0x99, 0x33});
+    possibleColors = {
+        Qt::white,
+        "#cc3333", // cccc00
+        "#339933", // 339999
+        "#cccc33",
+        "#3333ff"
+    };
 
-    lights[1].pos = {-4, 0, 0.5};
-    lights[2].pos = {4, 0, 0.5};
+    for(int i = 0; i < 3; i++)
+        lights[i].color = vColor(possibleColors[i]);
+
+    lights[1].pos = {4, 0, 0.5};
+    lights[2].pos = {-4, 0, 0.5};
 }
 
 static QString F(QString s) {
@@ -166,6 +174,8 @@ void Scene::render()
         chessVAO.bind();
 
         prog.setUniformValue("light", light);
+        prog.setUniformValue("camera", camera);
+        prog.setUniformValue("shininess", chessShininess);
 
         for(int color = 0; color < 2; color++) {
             prog.setUniformValue("color", color);
@@ -199,6 +209,7 @@ void Scene::render()
         prog.bind();
         boardVAO.bind();
 
+        prog.setUniformValue("camera", camera);
         prog.setUniformValue("nLights", nLights);
         for(int i = 0; i < nLights; i++) {
             prog.setUniformValue(("lights[" + QString::number(i) + "]").toStdString().c_str(), lights[i].pos);
@@ -242,6 +253,12 @@ void Scene::applyDelta(QPointF delta) {
 void Scene::applyMove(QPointF delta) {
     delta = {-delta.y(), -delta.x()};
     lookAt += 0.010 * vec3(QVector2D(delta).length() * polar(std::atan2(delta.y(), delta.x()) + angleOnGround), 0);
+}
+
+void Scene::applyMoveForward(float delta) {
+    QVector3D d = spherical(delta * 0.05, angleFromUp, angleOnGround);
+    camera += d;
+    lookAt += d;
 }
 
 void Scene::prepareShaderProgram()

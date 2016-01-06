@@ -22,8 +22,8 @@ SOURCES += main.cpp \
     scene.cpp \
     glwidget.cpp \
     mainwindow.cpp \
-    customwidgets.cpp \
-    objloader.cpp
+    objloader.cpp \
+    customwidgets.cpp
 
 HEADERS += \
     glassert.h \
@@ -31,8 +31,8 @@ HEADERS += \
     scene.h \
     glwidget.h \
     mainwindow.h \
-    customwidgets.h \
-    objloader.h
+    objloader.h \
+    customwidgets.h
 
 OTHER_FILES += \
     shaders/* \

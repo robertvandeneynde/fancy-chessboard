@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QList>
 #include <QSlider>
+#include <QString>
 
 #include "customwidgets.h"
 
@@ -17,6 +18,8 @@ class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
+    typedef FormatLabel MyLabel;
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -27,7 +30,7 @@ private:
 
     QList<int> defaultSliderValues;
     QList<QSlider*> sliders;
-    QList<FormatLabel*> labels;
+    QList<MyLabel*> labels;
 
 private:
     Scene* getScene();

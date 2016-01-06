@@ -28,6 +28,7 @@ public:
 public slots:
     void applyDelta(QPointF delta);
     void applyMove(QPointF delta);
+    void applyMoveForward(float delta);
     void applyZoom(float zoom); // +- 1
 
 public:
@@ -39,6 +40,23 @@ public:
     float lightRadius = 1;
     float lightSpeed = 0.2; // turns / second
     float lightInitPos = 0; // radians
+    float chessShininess = 32;
+
+    QList<QColor> possibleColors;
+
+    struct {
+        Scene* scene = 0;
+        void operator =(int x) {
+            if(! scene)
+                return;
+            int C = scene->possibleColors.length();
+            int N = C * C; // C ** lights.length()
+            x = ((x-1) % N + N) % N;
+            scene->lights[1].color = vColor(scene->possibleColors[x % C]);
+            scene->lights[2].color = vColor(scene->possibleColors[x / C % C]);
+            // x % 3 -> x / C % C -> x / C / C % C -> x / C / C / C % C
+        }
+    } lightColorsParam;
 
 private:
     QOpenGLShaderProgram surfProg, lightProg, chessProg, boardProg;

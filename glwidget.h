@@ -47,7 +47,7 @@ protected:
 private:
     QScopedPointer<Scene> scene;
     int tick = 0;
-    QPointF lastPosL, lastPosR;
+    QPointF lastPosL, lastPosR, lastPosM;
 
     static void infoGL();
 };

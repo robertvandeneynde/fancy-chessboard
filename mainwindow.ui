@@ -147,7 +147,7 @@
              <x>0</x>
              <y>0</y>
              <width>136</width>
-             <height>330</height>
+             <height>410</height>
             </rect>
            </property>
            <property name="maximumSize">
@@ -246,7 +246,7 @@
                <number>0</number>
               </property>
               <property name="maximum">
-               <number>10000</number>
+               <number>2000</number>
               </property>
               <property name="value">
                <number>800</number>
@@ -386,6 +386,9 @@
             </item>
             <item>
              <widget class="FormatLabel" name="nLightsLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of lights in the scene, the moving white and the red/green lights are the lights available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
               <property name="text">
                <string>nLights = %1</string>
               </property>
@@ -404,6 +407,64 @@
               </property>
               <property name="value">
                <number>3</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="lightColorsLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Change the colors of the two secondary lights.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>lightColors = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="lightColors">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>32</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>8</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="shininessLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Shiniess of the chess pieces&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>pieces-α = 2^%1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="shininess">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>10</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>5</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>

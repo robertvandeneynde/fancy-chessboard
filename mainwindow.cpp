@@ -5,12 +5,14 @@
 
 #include <stdexcept>
 #include <QMessageBox>
+#include <functional>
 
-static void addChildren(QList<QSlider*> & sliders, QList<FormatLabel*> & rawLabels, QWidget* widget) {
+template <typename T>
+static void addChildren(QList<QSlider*> & sliders, QList<T*> & rawLabels, QWidget* widget) {
     for(QObject* o : widget->children()) {
         if(QWidget* w = dynamic_cast<QWidget*>(o)) {
             sliders.push_back(dynamic_cast<QSlider*>(w));
-            rawLabels.push_back(dynamic_cast<FormatLabel*>(w));
+            rawLabels.push_back(dynamic_cast<T*>(w));
             if(! sliders.back())
                 sliders.pop_back();
             if(! rawLabels.back())
@@ -18,6 +20,40 @@ static void addChildren(QList<QSlider*> & sliders, QList<FormatLabel*> & rawLabe
             addChildren(sliders, rawLabels, w);
         }
     }
+}
+
+namespace mapvari {
+
+template <typename T>
+void general(T & value, QSlider* slider) {
+    value = slider->value();
+    QObject::connect(slider, &QSlider::valueChanged, [&value](int x){
+        value = x;
+    });
+}
+
+template <typename T, typename F>
+void general(T & value, QSlider* slider, F f) {
+    value = f(slider->value());
+    QObject::connect(slider, &QSlider::valueChanged, [&value, f](int x){
+        value = f(x);
+    });
+}
+
+template <typename T>
+void linear(T & value, QSlider* slider, T constant = 1) {
+    general(value, slider, [constant](int x) {
+        return constant * x;
+    });
+}
+
+template <typename T>
+void expo(T & value, QSlider* slider, T base = 2, T constant = 1) {
+    general(value, slider, [base, constant](int x) {
+        return constant * std::pow(base, x);
+    });
+}
+
 }
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -28,16 +64,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     ui->tabWidget->setCurrentIndex(0);
 
-    QList<FormatLabel*> rawLabels;
+    QList<MyLabel*> rawLabels;
 
     addChildren(sliders, rawLabels, ui->controls);
 
-    QList<FormatLabel*> labels;
+    QList<MyLabel*> labels;
     for(QSlider* slider : sliders) {
-        FormatLabel* savedLabel = nullptr;
-        QMutableListIterator<FormatLabel*> it(rawLabels);
+        MyLabel* savedLabel = nullptr;
+        QMutableListIterator<MyLabel*> it(rawLabels);
         while(it.hasNext()) {
-            FormatLabel* curLabel = it.next();
+            MyLabel* curLabel = it.next();
             if(curLabel->objectName().startsWith(slider->objectName())) {
                 if(savedLabel == nullptr) {
                     savedLabel = curLabel;
@@ -59,23 +95,10 @@ MainWindow::MainWindow(QWidget *parent) :
     if(sliders.size() != labels.size())
         throw std::invalid_argument("label size != slider size");
 
-    for(FormatLabel* label : labels)
+    for(MyLabel* label : labels)
         label->saveFormat();
 
     // link ui and scene
-    auto map = [](float & value, QSlider* slider, float constant) {
-        value = slider->value() * constant;
-        connect(slider, &QSlider::valueChanged, [&value, constant](int x){
-            value = x * constant;
-        });
-    };
-
-    auto mapInt = [](int & value, QSlider* slider, int constant) {
-        value = slider->value() * constant;
-        connect(slider, &QSlider::valueChanged, [&value, constant](int x){
-            value = x * constant;
-        });
-    };
 
     const float RPM = 1 / 60.0,
                 ANGLE = radians(1),
@@ -83,14 +106,16 @@ MainWindow::MainWindow(QWidget *parent) :
 
     Scene* scene = getScene();
 
-    map(scene->lightHeight, ui->lightHeight, CM);
-    map(scene->lightRadius, ui->lightRadius, CM);
-    map(scene->lightSpeed, ui->lightSpeed, RPM);
-    map(scene->lightInitPos, ui->lightInitPos, ANGLE);
+    mapvari::linear(scene->lightHeight, ui->lightHeight, CM);
+    mapvari::linear(scene->lightRadius, ui->lightRadius, CM);
+    mapvari::linear(scene->lightSpeed, ui->lightSpeed, RPM);
+    mapvari::linear(scene->lightInitPos, ui->lightInitPos, ANGLE);
 
-    map(scene->angleFromUp, ui->toUp, ANGLE);
-    map(scene->angleOnGround, ui->onGround, ANGLE);
-    map(scene->length, ui->cameraR, CM);
+    mapvari::linear(scene->angleFromUp, ui->toUp, ANGLE);
+    mapvari::linear(scene->angleOnGround, ui->onGround, ANGLE);
+    mapvari::linear(scene->length, ui->cameraR, CM);
+    mapvari::expo(scene->chessShininess, ui->shininess, 2.f);
+    mapvari::general(scene->lightColorsParam, ui->lightColors);
 
     auto convertAngle = [ANGLE](float rad) {
         return (((int)(rad / ANGLE)) % 360 + 360) % 360;
@@ -103,13 +128,17 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->toUp->setValue(convertAngle(scene->angleFromUp));
     });
 
-    mapInt(scene->nLights, ui->nLights, 1);
+    mapvari::linear(scene->nLights, ui->nLights, 1);
 
     auto it = labels.begin();
     for(QSlider* slider : sliders) {
-        FormatLabel* label = *it++;
-        label->formatInt(slider->value());
-        connect(slider, &QSlider::valueChanged, label, &FormatLabel::formatInt);
+        auto label = *it++;
+        int def = slider->value();
+        label->formatInt(def);
+        connect(slider, &QSlider::valueChanged, label, &MyLabel::formatInt);
+        connect(label, &MyLabel::clicked, [slider, def](){
+            slider->setValue(def);
+        });
     }
 
     connect(ui->defaultButton, &QPushButton::clicked, [this](){
@@ -133,9 +162,13 @@ MainWindow::MainWindow(QWidget *parent) :
                 "<h1>Fancy chessboard</h1>"
                 "<p>By Robert VANDEN EYNDE</p>"
                 "<ul>"
-                    "<li><strong>Left click</strong> to turn the camera.</li>"
-                    "<li><strong>Right click</strong> to translate the point the camera is looking at.</li>"
-                    "<li>There are multiple parameters in <strong>multiples tabs</strong>, hover the parameter name with the mouse to get a verbose explanation.</li>"
+                    "<li><strong>Left click</strong> and move to turn the camera (the camera is in spherical coordinates).</li>"
+                    "<li><strong>Right click</strong> and move to translate the point the camera is looking at.</li>"
+                    "<li><strong>Wheel</strong> to zoom in/out.</li>"
+                    "<li>There are multiple parameters in <strong>multiples tabs</strong></li>"
+                    "<li>Use the <strong>wheel</strong> on a slider to change by 1 step</li>"
+                    "<li><strong>Hover</strong> the parameter name with the mouse to get a verbose explanation.</li>"
+                    "<li><strong>Click</strong> the parameter name to reset to default value</li>"
                 "</ul>"
             );
             // msgBox->setModal( false );

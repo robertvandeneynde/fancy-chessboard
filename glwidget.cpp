@@ -103,6 +103,15 @@ void MyGLDrawer::mouseMoveEvent(QMouseEvent *ev) {
         lastPosR = ev->pos();
     }
 
+
+    if(ev->buttons() & Qt::MiddleButton) {
+        /*
+        float delta = ev->pos().y() - lastPosM.y();
+        scene->applyMoveForward(delta);
+        lastPosM = ev->pos();
+        */
+    }
+
     emit paramChanged();
 
     updateGL();
@@ -113,6 +122,8 @@ void MyGLDrawer::mousePressEvent(QMouseEvent *ev) {
         lastPosL = ev->pos();
     if(ev->button() == Qt::RightButton)
         lastPosR = ev->pos();
+    if(ev->button() == Qt::MiddleButton)
+        lastPosM = ev->pos();
     updateGL();
 }
 
