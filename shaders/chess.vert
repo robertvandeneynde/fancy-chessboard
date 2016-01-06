@@ -5,6 +5,7 @@ in vec3 vertexNormal;
 uniform mat4 matrix;
 uniform mat4 model;;
 uniform mat3 normalMatrix;
+uniform int color;
 
 out vec3 position;
 out vec3 normal;

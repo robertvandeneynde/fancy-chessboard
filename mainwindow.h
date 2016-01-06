@@ -2,6 +2,10 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QList>
+#include <QSlider>
+
+#include "customwidgets.h"
 
 #include "scene.h"
 
@@ -19,6 +23,11 @@ public:
 
 private:
     Ui::MainWindow *ui;
+    QWidget* modal = nullptr;
+
+    QList<int> defaultSliderValues;
+    QList<QSlider*> sliders;
+    QList<FormatLabel*> labels;
 
 private:
     Scene* getScene();

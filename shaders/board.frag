@@ -4,7 +4,10 @@ uniform int color;
 
 uniform sampler2D normalMap;
 
-uniform vec3 light;
+uniform vec3 lights[4];
+uniform vec3 lightColors[4];
+uniform int nLights = 1; // one light is enough
+
 in vec2 texCoord;
 in vec3 position;
 in vec3 normal;
@@ -20,16 +23,20 @@ void main(void)
 
     vec3 ambiant = vec3(0);
 
-    vec3 L = normalize(light - position);
     vec3 N = normalize(normalMapVec);
 
-    vec3 diffuse = max(0, dot(N,L)) * vec3(1);
+    vec3 diffuse = vec3(0,0,0);
+
+    for(int i = 0; i < nLights; i++) {
+        vec3 L = normalize(lights[i] - position);
+        diffuse += max(0, dot(L,N)) * lightColors[i];
+    }
 
     vec3 myColor;
     if(color == 0)
-        myColor = vec3(0.5,0,0);
+        myColor = vec3(0.5); // vec3(0,0,1); // black
     else
-        myColor = vec3(0,0,0.5);
+        myColor = vec3(0.8); // vec3(1,0,0); // white
 
     fragColor = (ambiant + diffuse) * myColor;
     // fragColor = ((position/8)+1)/2; // normalMapVec;

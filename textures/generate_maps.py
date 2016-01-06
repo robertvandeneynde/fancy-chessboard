@@ -5,6 +5,13 @@ from numpy.linalg import norm
 def normalized(x):
     return x / norm(x)
 
+# parameters
+
+S = 512
+d1 = 0.5
+d2 = 0.5
+zDir = 'down'
+
 '''
 # We define some 3D points
 9 i * * * * h
@@ -19,20 +26,20 @@ a,b,c,d, e,f,g,h, i,j,k = M = zeros((11,3))
 
 for d, dim in enumerate([
     [ # x
-        (a,c,i), 1, # (a, c, i) have x = 1
-        (b,d,j), 2,
-        (f,e,k), 8,
-        (g,h), 9
+        (a,c,i), d1, # (a, c, i) have x = 1
+        (b,d,j), d2,
+        (f,e,k), 10-d1-d2,
+        (g,h), 10-d1
     ],
     [ # y
-        (a,b,f,g), 1,
-        (c,d,e), 2,
-        (j,k), 8,
-        (i,h), 9
+        (a,b,f,g), d1,
+        (c,d,e), d1+d2,
+        (j,k), 10-d1-d2,
+        (i,h), 10-d1
     ],
     [ # z
-        (d,j,e,k), 0,
-        (a,b,f,g,h,i,c), 1
+        (d,j,e,k), 0 if zDir == 'down' else 1,
+        (a,b,f,g,h,i,c), 1 if zDir == 'down' else 0
     ],
 ]):
     for vtx, v in zip(dim[::2], dim[1::2]):
@@ -43,7 +50,6 @@ print(M)
 
 from PIL import Image
 
-S = 512
 im = Image.new('RGB', (S,S), (255,255,255))
 pix = im.load()
 
@@ -56,11 +62,11 @@ def iterchain(iterables):
             yield x
 
 def decirange(a,b):
-    return range(a * S // 10, b * S // 10)
+    return range(int(a * S // 10), int(b * S // 10))
 
 # define some ranges, product(range, range) are the points of a rect !
 R0, R1, R2, R3, R4, R5 = R = list(starmap(decirange, [
-    (0,1), (1,2), (2,8), (8,9), (9,10), (0,10)
+    (0,d1), (d1,d1+d2), (d1+d2,10-d1-d2), (10-d1-d2,10-d1), (10-d1,10), (0,10)
 ]))
 
 print(R)
@@ -77,8 +83,8 @@ def normalToColor(N):
 c = count(0)
 
 def save(final=False):
-    im.save('normal-map-{}.png'.format(next(c)) if not final else
-            'normal-map.png')
+    base = 'normal-map-d1={}-d2={}-zDir={}'.format(d1,d2,zDir)
+    im.save(base + ('-{}.png'.format(next(c)) if not final else '.png'))
     
 for x,y in iterchain(starmap(product, [
     (R0, R5), (R4, R5), (R5, R0), (R5, R4), (R2, R2)]

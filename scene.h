@@ -59,17 +59,26 @@ private:
         void onloaded() override;
     } chess;
 
-
     struct ChessPiece {
         OBJLoader* chessType;
         QPoint position; // (0,0): A1; (1,0): B1;
         int color; // 0 is white
     };
 
+    struct Light {
+        QVector3D pos;
+        QVector3D color;
+    } lights[10];
+public:
+    int nLights = 1;
+private:
+
+    QVector3D & light = lights[0].pos;
+
     QVector<ChessPiece> chessPieces; // size = 32
 
     QMatrix4x4 p, v;
-    QVector3D camera, dep, light;
+    QVector3D camera, lookAt;
 
     void prepareShaderProgram();
     void prepareVertexBuffers();

@@ -23,6 +23,8 @@ public:
 
     Scene* getScene() { return scene.data(); }
 
+signals:
+    void paramChanged();
 protected:
     void initializeGL() override;
     void resizeGL(int w, int h) override;

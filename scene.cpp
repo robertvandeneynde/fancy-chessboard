@@ -37,6 +37,13 @@ Scene::Scene()
     angleOnGround = radians(225); // theta is 2D angle, phi is 3D
 
     lightSpeed = 1; // seconds / turn
+
+    lights[0].color = vColor(Qt::white);
+    lights[1].color = vColor({0xcc, 0x33, 0x33});
+    lights[2].color = vColor({0x33, 0x99, 0x33});
+
+    lights[1].pos = {-4, 0, 0.5};
+    lights[2].pos = {4, 0, 0.5};
 }
 
 static QString F(QString s) {
@@ -50,9 +57,22 @@ void Scene::initialize()
     glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE); // default is glFrontFace​(GL_CCW);
 
-    texTriangles.reset(new QOpenGLTexture(QImage(F(":/textures/diag.png")))); // brickwall.jpg
-    texTriangleBump.reset(new QOpenGLTexture(QImage(F(":/textures/diag-bump.png")))); // brickwall_normal.jpg
-    texBoardNormalMap.reset(new QOpenGLTexture(QImage(F(":/textures/normal-map.png"))));
+    QString files[] = {
+        F(":/textures/diag.png"),
+        F(":/textures/diag-bump.png"),
+        F(":/textures/normal-map.png"),
+    };
+
+    int i = 0;
+    for(QScopedPointer<QOpenGLTexture>* tt : {&texTriangles, &texTriangleBump, &texBoardNormalMap}) {
+        QImage image(files[i]);
+        if(image.isNull()) {
+            qCritical() << "Error loading texture " << files[i];
+            exit(1);
+        }
+        tt->reset(new QOpenGLTexture(QImage(files[i])));
+        ++i;
+    }
 
     texTriangles->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
     texTriangles->setMagnificationFilter(QOpenGLTexture::Linear);
@@ -68,11 +88,11 @@ void Scene::update(double t)
     const double speed2 = 15.0; // s / tour
     // theta = M_PI * sinC(t / speed1); // rad
     // angleOnGround = (t / speed2) * (2 * M_PI); // rad
-    camera = dep + length * spherical(angleFromUp, angleOnGround);
+    camera = lookAt + length * spherical(angleFromUp, angleOnGround);
     light = vec3(lightRadius * polar(lightInitPos + linearAngle(t * lightSpeed)), lightHeight);
 
     v.setToIdentity();
-    v.lookAt(camera, dep, {0, 0, 1});
+    v.lookAt(camera, lookAt, {0, 0, 1});
 }
 
 void Scene::applyZoom(float zoom) {
@@ -86,7 +106,8 @@ void Scene::render()
     auto pv = p * v;
 
     // surface
-    {
+    for(;;){
+        break;
         auto& prog = surfProg;
         QMatrix4x4 m;
         surfVAO.bind(); // glBindVertexArray(vao)
@@ -123,13 +144,16 @@ void Scene::render()
             glDrawArrays(GL_LINES, 6 * 3 * 4, 9 * 4);
             */
 
-            QMatrix4x4 m;
+            for(int i = 0; i < nLights; i++) {
+                QMatrix4x4 m;
 
-            m.translate(light);
-            m.scale(0.1);
+                m.translate(lights[i].pos);
+                m.scale(0.1);
 
-            prog.setUniformValue("matrix", pv * m);
-            glDrawArrays(GL_QUADS, 0, 6 * 3 * 4);
+                prog.setUniformValue("color", lights[i].color);
+                prog.setUniformValue("matrix", pv * m);
+                glDrawArrays(GL_QUADS, 0, 6 * 3 * 4);
+            }
         }
     }
 
@@ -144,6 +168,7 @@ void Scene::render()
         prog.setUniformValue("light", light);
 
         for(int color = 0; color < 2; color++) {
+            prog.setUniformValue("color", color);
             auto colorA1 = boardA1;
 
             if(color == 1)
@@ -174,7 +199,11 @@ void Scene::render()
         prog.bind();
         boardVAO.bind();
 
-        prog.setUniformValue("light", light);
+        prog.setUniformValue("nLights", nLights);
+        for(int i = 0; i < nLights; i++) {
+            prog.setUniformValue(("lights[" + QString::number(i) + "]").toStdString().c_str(), lights[i].pos);
+            prog.setUniformValue(("lightColors[" + QString::number(i) + "]").toStdString().c_str(), lights[i].color);
+        }
         prog.setUniformValue("normalMatrix", QMatrix());
 
         texBoardNormalMap->bind(0); // texture unit 0
@@ -212,7 +241,7 @@ void Scene::applyDelta(QPointF delta) {
 
 void Scene::applyMove(QPointF delta) {
     delta = {-delta.y(), -delta.x()};
-    dep += 0.010 * vec3(QVector2D(delta).length() * polar(std::atan2(delta.y(), delta.x()) + angleOnGround), 0);
+    lookAt += 0.010 * vec3(QVector2D(delta).length() * polar(std::atan2(delta.y(), delta.x()) + angleOnGround), 0);
 }
 
 void Scene::prepareShaderProgram()

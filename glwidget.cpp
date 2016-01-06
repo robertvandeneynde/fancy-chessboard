@@ -26,7 +26,7 @@ MyGLDrawer::MyGLDrawer(QWidget *parent)
     context()->create();
 
     printContextInfos();
-    resize(800, 450);
+    resize(1000, 700);
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateScene()));
@@ -103,6 +103,8 @@ void MyGLDrawer::mouseMoveEvent(QMouseEvent *ev) {
         lastPosR = ev->pos();
     }
 
+    emit paramChanged();
+
     updateGL();
 }
 
@@ -124,4 +126,5 @@ void MyGLDrawer::keyPressEvent(QKeyEvent *ev) {
 
 void MyGLDrawer::wheelEvent(QWheelEvent * ev) {
     scene->applyZoom(ev->delta() / 120.0);
+    emit paramChanged();
 }
