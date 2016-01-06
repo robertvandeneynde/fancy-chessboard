@@ -119,40 +119,92 @@ void Scene::update(double t)
 
     if(t > timeEndKnightAnimation + movementWaiting && anim.state == anim.WAIT) {
         // start anim
-        QList<ChessPiece*> myKnights = knights[rand() % 2];
+        int color = colorTurn;
+        ++colorTurn %= 2;
 
-        QList<QList<QPoint>> possib;
-        QPoint ds[] = {{2,-1}, {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,2}};
+        QList<int> proba = {1,1,1,1,1,1};
+        QList<OBJObject*> types = {chess.tower, chess.knight, chess.bishop, chess.queen, chess.king, chess.pawn};
 
-        for(ChessPiece* knight : myKnights) {
-            possib.push_back({});
+        QList<QPoint>
+            kni = {{2,-1}, {2,1}, {1,2}, {-1,2}, {-2,1}, {-2,-1}, {-1,-2}, {1,2}},
+            tow = {{1,0}, {0,1}, {-1,0}, {0,-1}},
+            bis = {{1,1}, {-1,1}, {-1,1}, {-1,-1}},
+            que = {{1,0}, {0,1}, {-1,0}, {0,-1}, {1,1}, {-1,1}, {-1,1}, {-1,-1}},
+            paw0 = {{0,1}},
+            paw1 = {{0,-1}};
 
-            for(QPoint d : ds) {
-                QPoint p = knight->position + d;
-                if(0 <= p.x() && p.x() < 8 && 0 <= p.y() && p.y() < 8) {
-                    bool blocked = false;
-                    for(ChessPiece* c : chessPieces)
-                        if(c->position == p) {
-                            blocked = true;
-                            break;
-                        }
+        bool done = false;
+        while(!done && types.length()) {
+            QList<OBJObject*> bag;
+            for(int i = 0; i < proba.length(); i++)
+                for(int n = 0; n < proba[i]; n++)
+                    bag << types[i];
 
-                    if(! blocked)
+            OBJObject* typ = bag[rand() % bag.length()];
+            proba.removeAt(types.indexOf(typ));
+            types.removeOne(typ);
+
+            QList<ChessPiece*> myPieces;
+            for(ChessPiece* c : chessPieces)
+                if(c->color == color && c->type == typ)
+                    myPieces << c;
+
+            auto inRange = [](QPoint p){
+                return 0 <= p.x() && p.x() < 8 && 0 <= p.y() && p.y() < 8;
+            };
+
+            auto emptyCase = [this](QPoint p) {
+                for(ChessPiece* c : chessPieces)
+                    if(c->position == p)
+                        return false;
+                return true;
+            };
+
+            QList<QPoint> mov = typ == chess.knight ? kni :
+                typ == chess.bishop ? bis :
+                typ == chess.tower ? tow :
+                typ == chess.queen ? que :
+                typ == chess.king ? que :
+                color == 0 ? paw0 : paw1;
+
+            int baseRange = (typ == chess.pawn || typ == chess.king || typ == chess.knight) ? 1 : 10000;
+
+            QList<QList<QPoint>> possib;
+            QMutableListIterator<ChessPiece*> it(myPieces);
+            while(it.hasNext()){
+                possib.push_back({});
+                ChessPiece* pi = it.next();
+                int range = pi->type == chess.pawn && (pi->color == 0 && pi->position.y() == 1 || pi->color == 1 && pi->position.y() == 6) ? 2 : baseRange;
+
+                for(QPoint d : mov) {
+                    int r = 1;
+                    QPoint p = pi->position + d;
+                    while(r <= range && inRange(p) && emptyCase(p)) {
                         possib.back() << p;
+                        p += d;
+                        r++;
+                    }
                 }
+
+                if(possib.back().empty()) {
+                    possib.pop_back();
+                    it.remove();
+                }
+            }
+
+            if(possib.length()) {
+                int n = rand() % possib.length();
+                anim.tstart = t;
+                anim.piece = myPieces[n];
+                anim.type = typ == chess.knight ? anim.preffered : anim.LIN;
+                anim.startTo(possib[n][rand() % possib[n].length()]);
+                done = true;
             }
         }
 
-        if(possib[0].length() || possib[1].length()) {
-            int n = possib[0].empty() || possib[0].length() && possib[1].length() && rand() % 2 ? 1 : 0;
-
-            anim.tstart = t;
-            anim.piece = myKnights[n];
-            anim.startTo(possib[n][rand() % possib[n].length()]);
-        } else {
-            qDebug() << "stuck !";
-            anim.state = anim.DONE;
-            anim.state = anim.WAIT;
+        if(types.empty()) {
+            qCritical() << "Draw ! Color " << color << " is PAT.";
+            exit(0);
         }
     }
 
@@ -183,11 +235,13 @@ void Scene::render()
     auto pv = p * v;
 
     if(onKnightAnim.isRunning && anim.piece) {
-        auto T = anim.bezier3Derivative().normalized();
+        auto T = vec2(anim.to - anim.fr).normalized();
         auto R = anim.rightVector();
         QMatrix4x4 vPrime;
-        auto e = A1Coord + anim.pos3D + 2 * Z;
-        auto d = vec3(T.toVector2D().normalized(), -1);
+        auto t = anim.piece->type;
+        auto H = t->geom.size.z();
+        auto e = A1Coord + -T*0.2 + anim.pos3D + Z * (t == chess.knight ? 2 : H + 0.5 );
+        auto d = vec3(T, -1);
         QMatrix4x4 dt;
 
         dt.rotate(degrees(onKnightAnim.lookAround), Z);
@@ -318,7 +372,7 @@ void Scene::render()
     }
 
     // bezier
-    if(anim.state == anim.RUN) {
+    if(anim.state == anim.RUN && (anim.type == anim.DEG3 || anim.type == anim.DEG4)) {
         auto& prog = bezierProg;
         prog.bind();
         bezierVAO.bind();
@@ -771,12 +825,18 @@ void Scene::KnightAnimation::startTo(QPoint target) {
         P[0] = P[1] = vec3(vec2(fr), 0);
         P[3] = P[2] = vec3(vec2(to), 0);
         P[1][2] = P[2][2] = height;
+    } else {
+        P[0] = vec3(vec2(fr), 0);
+        P[1] = vec3(vec2(to), 0);
     }
 }
 
 void Scene::KnightAnimation::update(float tnow) {
     elapsed = tnow - tstart;
-    bezier();
+    if(type == DEG3 || type == DEG4)
+        bezier();
+    else
+        pos3D = P[0] + (P[1] - P[0]) * elapsed / duration;
     if(elapsed > duration) {
         state = DONE;
         piece->position = to;

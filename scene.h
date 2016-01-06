@@ -84,6 +84,8 @@ private:
         int color; // 0 is white
     };
 
+    int colorTurn = 0;
+
     struct Light {
         QVector3D pos;
         QVector3D color;
@@ -111,7 +113,7 @@ private:
         float duration = 1.5; // s
 
         float height = 5;
-        enum {DEG3, DEG4} type = DEG3;
+        enum {DEG3, DEG4, LIN} type = DEG3, preffered = DEG3;
 
         enum {WAIT, RUN, DONE} state = WAIT;
 
@@ -125,8 +127,9 @@ private:
             KnightAnimation& self;
             void operator=(int x) {
                 x = std::max(1,x);
+                self.preffered = x % 2 == 1 ? DEG3 : DEG4;
                 self.type = x % 2 == 1 ? DEG3 : DEG4;
-                self.height = 2.5f * ((x + 1) / 2);
+                self.height = 2.5f * ((x + 1) / 3);
             }
         } mode;
 
