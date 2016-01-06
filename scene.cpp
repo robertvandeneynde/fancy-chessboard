@@ -32,8 +32,8 @@ Scene::Scene()
     : surfVertexBuf(QOpenGLBuffer::VertexBuffer)
     , surfColorBuf(QOpenGLBuffer::VertexBuffer)
 {
-    anim.scene = this;
-    srand(89);
+    anim.scene = falling.scene = this;
+    srand(time(0));
     lightColorsParam.scene = this;
     length = 3;
     angleFromUp = radians(60);
@@ -117,12 +117,12 @@ void Scene::update(double t)
     v.setToIdentity();
     v.lookAt(camera, lookAt, {0, 0, 1});
 
-    if(t > timeEndKnightAnimation + movementWaiting && anim.state == anim.WAIT) {
+    if(!falling.running && t > timeEndKnightAnimation + movementWaiting && anim.state == anim.WAIT) {
         // start anim
         int color = colorTurn;
         ++colorTurn %= 2;
 
-        QList<int> proba = {1,1,1,1,1,1};
+        QList<int> proba = {1,6,1,1,1,3};
         QList<OBJObject*> types = {chess.tower, chess.knight, chess.bishop, chess.queen, chess.king, chess.pawn};
 
         QList<QPoint>
@@ -215,6 +215,9 @@ void Scene::update(double t)
             anim.state = anim.WAIT;
         }
     }
+
+    if(falling.running)
+        falling.update(t);
 }
 
 void Scene::applyZoom(float zoom) {
@@ -315,6 +318,7 @@ void Scene::render()
         prog.setUniformValue("camera", camera);
         prog.setUniformValue("shininess", chessShininess);
 
+        int ip = 0;
         for(ChessPiece* p : chessPieces) {
             auto m = boardA1;
             auto obj = p->type;
@@ -330,6 +334,16 @@ void Scene::render()
                 if(p->color == 1)
                     m.rotate(180);
 
+            if(falling.running) {
+                auto& pos = falling.positions[ip];
+                float diff = obj->geom.size.z() - pos;
+                if(diff < 0) {
+                    m.translate(0, 0, pos - obj->geom.size.z());
+                } else {
+                    m.scale(1, 1, 1 - diff / obj->geom.size.z());
+                }
+            }
+
             prog.setUniformValue("color", p->color);
             prog.setUniformValue("model", m);
             prog.setUniformValue("matrix", pv * m);
@@ -340,6 +354,7 @@ void Scene::render()
             obj->bufferNormals.bind();
             prog.setAttributeBuffer("vertexNormal", GL_FLOAT, 0, 3);
             obj->draw();
+            ip++;
         }
     }
 
@@ -533,6 +548,8 @@ void Scene::ChessObj::onloaded() {
                  << "quads:" << obj->quads.size()
                  << "norm:" << obj->normals.size()
                  << "texCoord:" << obj->texCoord.size()
+                 << "min:" << geom.min
+                 << "max:" << geom.max
                  << "center:" << geom.center
                  << "size:" << geom.size;
 
@@ -804,6 +821,8 @@ void Scene::prepareVertexBuffers()
     }
 
     glCheckError();
+
+    falling.start(0);
 }
 
 QVector3D Scene::KnightAnimation::rightVector() {

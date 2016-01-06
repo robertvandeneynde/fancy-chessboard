@@ -9,6 +9,7 @@
 #include <QColor>
 #include <QPainter>
 #include <QVector>
+#include <QMap>
 
 #include "utils.h"
 #include "objloader.h"
@@ -178,6 +179,59 @@ public:
     } onKnightAnim;
 
     float movementWaiting = 5;
+
+    struct Falling {
+        Scene* scene;
+        float timeCutOff = 15; //s
+        bool running = false;
+        QList<float> positions; // of top point
+        QList<float> velocities; // of top point
+        QList<float> masses;
+
+        float g = 10.0;
+        float k = 60;
+        float alpha = 3;
+
+        float firstT = 0, lastT = 0;
+
+        void start(float t) {
+            positions.clear();
+            velocities.clear();
+            masses.clear();
+
+            const float rho = 1;
+            running = true;
+            firstT = lastT = t;
+            for(ChessPiece* obj : scene->chessPieces) {
+                float random = rand() % 10 / 10.0;
+                positions.append(5 + random * 1.50 + obj->type->geom.size.z());
+                velocities.append(0);
+                masses.append(rho * obj->type->geom.size.x() * obj->type->geom.size.y() * obj->type->geom.size.z());
+            }
+        }
+
+        void update(float t) {
+            const float eps = 0.1;
+
+            bool stop = true;
+            float dt = t - lastT;
+            auto pp = positions.begin(); auto vv = velocities.begin(); auto mm = masses.begin();
+            for(ChessPiece* obj : scene->chessPieces) {
+                auto& p = *pp++; auto& v = *vv++; auto& m = *mm++;
+                auto H = obj->type->geom.size.z();
+                float d = H - p;
+                float a = d > 0 ? d * k / m - alpha * v : -g;
+                v += a * dt;
+                p += v * dt;
+                if(!(abs(v) < eps && abs(a) < eps))
+                    stop = false;
+            }
+            lastT = t;
+            if(stop || t - firstT > timeCutOff) {
+                running = false;
+            }
+        }
+    } falling;
 };
 
 #endif // SCENE_H

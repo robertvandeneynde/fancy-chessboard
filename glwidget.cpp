@@ -84,9 +84,14 @@ void MyGLDrawer::resizeGL(int w, int h) {
     scene->resize(w, h);
 }
 
+float MyGLDrawer::currentTime() {
+    return tick * 20.0 / 1000.0;
+}
+
 void MyGLDrawer::updateScene()
 {
-    scene->update((tick++) * 20.0 / 1000.0);
+    scene->update(currentTime());
+    tick++;
     updateGL();
 }
 

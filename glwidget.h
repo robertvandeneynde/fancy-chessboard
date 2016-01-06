@@ -44,6 +44,8 @@ protected:
 
     void paintEvent(QPaintEvent *) override;
 
+public:
+    float currentTime();
 private:
     QScopedPointer<Scene> scene;
     int tick = 0;
