@@ -47,6 +47,13 @@ void linear(T & value, QSlider* slider, T constant = 1) {
     });
 }
 
+template <typename T, typename F>
+void linear(T & value, QSlider* slider, T constant, F f) {
+    general(value, slider, [constant, f](int x) {
+        return f(constant * x);
+    });
+}
+
 template <typename T>
 void expo(T & value, QSlider* slider, T base = 2, T constant = 1) {
     general(value, slider, [base, constant](int x) {
@@ -56,7 +63,7 @@ void expo(T & value, QSlider* slider, T base = 2, T constant = 1) {
 
 }
 
-MainWindow::MainWindow(QWidget *parent) :
+MainWindow::MainWindow(QWidget* parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
@@ -145,15 +152,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     mapvari::linear(scene->falling.g, ui->fallingGravity);
     mapvari::linear(scene->falling.k, ui->fallingK);
-    mapvari::linear(scene->falling.timeCutOff, ui->fallingMaxT);
+    mapvari::general(scene->falling.timeCutOff, ui->fallingMaxT, [this](int x){
+        return x == ui->fallingMaxT->maximum() ? 1e6 : x;
+    });
+    ui->fallingMaxTLabel->setFunc([this](QString s, int x) -> QString {
+        return x == ui->fallingMaxT->maximum() ? s.arg("∞") : s.arg(x);
+    });
 
     connect(ui->buttonBoing, &QPushButton::clicked, [this, scene](){
         scene->falling.start(ui->gl->currentTime());
     });
 
-    ui->animModeLabel->setFunc([](QString format, int x){
+    ui->animModeLabel->setFunc([scene](QString format, int x){
         x = std::max(1,x);
-        return format.arg(x % 2 == 1 ? "d3" : "d4").arg(2.5f * ((x + 1) / 2));
+        return format.arg(x % 2 == 1 ? "p3" : "p4").arg(scene->anim.mode.getHeight(x));
     });
 
     auto convertAngle = [ANGLE](float rad) {
@@ -227,7 +239,25 @@ MainWindow::MainWindow(QWidget *parent) :
         }
     });
 
-    showMaximized();
+    QStringList params = QApplication::arguments().mid(1);
+    bool setdefault = true;
+    if(params.length() >= 5 && params[0] == "rec") {
+        int p[4];
+        bool ok = true;
+        for(int i = 0; i < 4; i++) {
+            p[i] = params[1+i].toInt(&ok);
+            if(! ok)
+                break;
+        }
+        if(ok) {
+            resize(p[2], p[3]);
+            move(p[0], p[1]);
+        }
+        setdefault = ok;
+    }
+    if(setdefault) {
+        showMaximized();
+    }
 }
 
 MainWindow::~MainWindow()

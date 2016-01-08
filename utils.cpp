@@ -4,8 +4,6 @@
 #include <QtMath>
 #include <QRegularExpression>
 
-#define M_TWO_PI 2 * M_PI
-
 QVector2D polar(float angleInRadians) {
     return {std::cos(angleInRadians), std::sin(angleInRadians)};
 }
@@ -50,6 +48,14 @@ QVector3D vColor(QColor c) {
 
 QVector4D vColorA(QColor c) {
     return {c.redF(), c.greenF(), c.blueF(), c.alphaF()};
+}
+
+QColor color3(QVector3D c) {
+    return {int(c.x() * 255), int(c.y() * 255), int(c.z() * 255)};
+}
+
+QColor color4(QVector4D c) {
+    return {int(c.x() * 255), int(c.y() * 255), int(c.z() * 255), int(c.w() * 255)};
 }
 
 QVector<QVector2D> fromString(QString s) {
@@ -141,17 +147,25 @@ double fracC(double x) {
 }
 
 double linearAngle(double x) {
-    return frac(x) * (2 * M_PI);
+    return M_TAU * frac(x);
 }
 
 double absSinC(double x) {
-    return std::abs(std::sin(x * 2 * M_PI));
+    return std::abs(std::sin(M_TAU * x));
 }
 
 double sinC(double x) {
-    return positiveSin(x * 2 * M_PI);
+    return positiveSin(M_TAU * x);
 }
 
 QVector3D cross(QVector3D a, QVector3D b) {
     return QVector3D::crossProduct(a,b);
+}
+
+QVector2D vec2(QPoint p) {
+    return {(float)p.x(), (float)p.y()};
+}
+
+QVector2D vec2(QPointF p) {
+    return {p.x(), p.y()};
 }

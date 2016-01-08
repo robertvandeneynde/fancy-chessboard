@@ -25,7 +25,7 @@ public:
     void render();
     void resize(int width, int height);
 
-    void paint(QPainter&);
+    static void glCheckError();
 
 public slots:
     void applyDelta(QPointF delta);
@@ -53,23 +53,35 @@ public:
                 return;
             int C = scene->possibleColors.length();
             int N = C * C; // C ** lights.length()
-            x = ((x-1) % N + N) % N;
+            x = ((x-1) % N + N) % N; // 1-based, modulo N
             scene->lights[1].color = vColor(scene->possibleColors[x % C]);
             scene->lights[2].color = vColor(scene->possibleColors[x / C % C]);
-            // x % 3 -> x / C % C -> x / C / C % C -> x / C / C / C % C
+            // f(i=0) = x % C, f(1) = x / C % C, f(2) = x / C / C % C, f(3) = x / C / C / C % C, f(i) = x / C**i % C
+        }
+
+        operator int() {
+            if(! scene)
+                return 0;
+            int C = scene->possibleColors.length();
+            int a = scene->possibleColors.indexOf(color3(scene->lights[1].color));
+            int b = scene->possibleColors.indexOf(color3(scene->lights[2].color));
+            if(a == -1 || b == -1)
+                return 0;
+            return a * C + b;
         }
     } lightColorsParam;
 
 private:
-    QOpenGLShaderProgram surfProg, lightProg, chessProg, boardProg, bezierProg;
+    QOpenGLShaderProgram surfProg, lightProg, chessProg, boardProg, bezierProg, cubeMapProg;
 
-    QOpenGLVertexArrayObject surfVAO, lightVAO, chessVAO, boardVAO, bezierVAO;
+    QOpenGLVertexArrayObject surfVAO, lightVAO, chessVAO, boardVAO, bezierVAO, cubeMapVAO;
     QOpenGLBuffer
         surfVertexBuf, surfNormalBuf, surfColorBuf, surfTexcoordBuf,
-        lampCubeBuf, boardVertexBuffer, bezierPoints;
+        lampCubeBuf, boardVertexBuffer, bezierPoints, cubeMapPoints;
 
     QScopedPointer<QOpenGLTexture>
         texTriangles, texTriangleBump, texBoardNormalMap;
+    GLuint cubeMapTexture;
 
     struct ChessObj : public OBJLoader {
         typedef OBJObject *OBJObjectPtr;
@@ -91,11 +103,12 @@ private:
         QVector3D pos;
         QVector3D color;
     } lights[10];
+
 public:
     int nLights = 1;
     QVector3D lookAt;
-private:
 
+private:
     QVector3D & light = lights[0].pos;
 
     QList<ChessPiece*> chessPieces; // size = 32
@@ -104,8 +117,13 @@ private:
     QMatrix4x4 p, v;
     QVector3D camera;
 
+    void loadTextures();
+    void loadModels();
     void prepareShaderProgram();
     void prepareVertexBuffers();
+
+    // animations
+public:
 
     float timeEndKnightAnimation = 0;
     struct KnightAnimation {
@@ -130,7 +148,11 @@ private:
                 x = std::max(1,x);
                 self.preffered = x % 2 == 1 ? DEG3 : DEG4;
                 self.type = x % 2 == 1 ? DEG3 : DEG4;
-                self.height = 2.5f * ((x + 1) / 3);
+                self.height = getHeight(x);
+            }
+
+            float getHeight(int i) {
+                return 1.f * ((std::max(1,i) + 1) / 2);
             }
         } mode;
 

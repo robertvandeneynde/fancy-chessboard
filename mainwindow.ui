@@ -129,7 +129,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_1">
           <property name="sizePolicy">
@@ -185,7 +185,7 @@
                <number>179</number>
               </property>
               <property name="value">
-               <number>45</number>
+               <number>50</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -217,7 +217,7 @@
                <number>360</number>
               </property>
               <property name="value">
-               <number>225</number>
+               <number>200</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -249,7 +249,7 @@
                <number>200</number>
               </property>
               <property name="value">
-               <number>100</number>
+               <number>75</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -441,7 +441,7 @@
                <number>100</number>
               </property>
               <property name="value">
-               <number>10</number>
+               <number>20</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -483,7 +483,7 @@
             <item>
              <widget class="FormatLabel" name="nLightsLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of lights in the scene, the moving white and the red/green lights are the lights available.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Number of lights in the scene, the moving white and the red/green lights are the lights available. The checkboard is affected by the 3 lights whereas the chess pieces are only affected by the white.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>nLights = %1</string>
@@ -531,7 +531,7 @@
                <number>1</number>
               </property>
               <property name="value">
-               <number>8</number>
+               <number>12</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -608,7 +608,7 @@
             <item>
              <widget class="FormatLabel" name="animModeLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type of bezier curve&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type of bezier curve (3 points or 4 points) and height of jump.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>knight: %1-%2m</string>
@@ -621,7 +621,7 @@
                <number>1</number>
               </property>
               <property name="maximum">
-               <number>6</number>
+               <number>10</number>
               </property>
               <property name="pageStep">
                <number>1</number>
@@ -763,7 +763,7 @@
             <item>
              <widget class="FormatLabel" name="fallingGravityLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Type of bezier curve&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Gravity g in equation &amp;quot;a = -mg&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>gravity-g: %1</string>
@@ -792,7 +792,7 @@
             <item>
              <widget class="FormatLabel" name="fallingKLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Duration of a movement&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Elasticity parameter k in equation &amp;quot;a = (k/m) x - α v&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>spring-k = %1</string>
@@ -821,7 +821,7 @@
             <item>
              <widget class="FormatLabel" name="fallingAlphaLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Time between two movements.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Friction parameter α in equation &amp;quot;a = (k/m) x - α v&amp;quot;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>friction-α = %1</string>
@@ -850,7 +850,7 @@
             <item>
              <widget class="FormatLabel" name="fallingMaxTLabel">
               <property name="toolTip">
-               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Time between two movements.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Max time of animation. The animation may finish earlier if all the speed and acceleration are near 0.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
               <property name="text">
                <string>max-t = %1s</string>
@@ -863,7 +863,7 @@
                <number>0</number>
               </property>
               <property name="maximum">
-               <number>30</number>
+               <number>60</number>
               </property>
               <property name="pageStep">
                <number>1</number>

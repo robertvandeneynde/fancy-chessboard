@@ -1,7 +1,5 @@
 #include "scene.h"
 
-#include "glassert.h"
-
 #include <QtMath>
 #include <QObject>
 #include <QOpenGLContext>
@@ -22,6 +20,8 @@
 #include <QRegularExpression>
 #include <QMap>
 #include <QFile>
+
+#include <QOpenGLPixelTransferOptions>
 
 using std::min;
 using std::max;
@@ -61,12 +61,12 @@ Scene::~Scene() {
         delete p;
 }
 
-static QVector2D vec2(QPoint p) {
-    return {(float)p.x(), (float)p.y()};
-}
-
-static QVector2D vec2(QPointF p) {
-    return {p.x(), p.y()};
+void Scene::glCheckError() {
+    GLenum error = glGetError();
+    if(error) {
+        qCritical() << "Gl error #" << (int)(error);
+        exit(1);
+    }
 }
 
 static QString F(QString s) {
@@ -75,11 +75,7 @@ static QString F(QString s) {
     return "/home/robert/cours/3D/FancyChessBoard/" + s;
 }
 
-void Scene::initialize()
-{
-    glEnable(GL_DEPTH_TEST);
-    // glEnable(GL_CULL_FACE); // default is glFrontFace​(GL_CCW);
-
+void Scene::loadTextures() {
     QString files[] = {
         F(":/textures/diag.png"),
         F(":/textures/diag-bump.png"),
@@ -89,28 +85,102 @@ void Scene::initialize()
     int i = 0;
     for(QScopedPointer<QOpenGLTexture>* tt : {&texTriangles, &texTriangleBump, &texBoardNormalMap}) {
         QImage image(files[i]);
-        if(image.isNull()) {
-            qCritical() << "Error loading texture " << files[i];
-            exit(1);
-        }
-        tt->reset(new QOpenGLTexture(QImage(files[i])));
+
+        if(image.isNull())
+            qCritical() << "Error loading texture " << files[i], exit(1);
+
+        tt->reset(new QOpenGLTexture(image));
+        (*tt)->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
+        (*tt)->setMagnificationFilter(QOpenGLTexture::Linear);
         ++i;
     }
 
-    texTriangles->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
-    texTriangles->setMagnificationFilter(QOpenGLTexture::Linear);
+    {
+        // cubeMapTexture.reset(new QOpenGLTexture(QOpenGLTexture::TargetCubeMap));
+        // auto& self = *cubeMapTexture;
+        glGenTextures(1, &cubeMapTexture);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+
+        for(int i = 0; i < 6; i++) {
+            QImage image(F(":/textures/cubemap/%1.png").arg(i));
+
+            QOpenGLTexture::CubeMapFace cubeFace = (QOpenGLTexture::CubeMapFace)(QOpenGLTexture::CubeMapPositiveX + i);
+            if(image.isNull())
+                qCritical() << "Error loading cubemap" << i, exit(1);
+
+            // from source of setData(QImage); http://osxr.org/qt/source/qtbase/src/gui/opengl/qopengltexture.cpp
+
+            /*
+            self.setFormat(QOpenGLTexture::RGBA8_UNorm);
+            self.setSize(image.width(), image.height());
+            self.setMipLevels(self.maximumMipLevels()); // by default generate mip map
+            self.allocateStorage();
+
+            // Upload pixel data and generate mipmaps
+            QImage glImage = image.convertToFormat(QImage::Format_RGBA8888);
+            QOpenGLPixelTransferOptions uploadOptions;
+            uploadOptions.setAlignment(1);
+            self.setData(0, 0, cubeFace, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, glImage.bits(), &uploadOptions);
+            */
+
+            QImage glImage = image.convertToFormat(QImage::Format_RGBA8888);
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
+        }
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        // cubeMapTexture->release();
+    }
 
     glCheckError();
+}
+
+void Scene::initialize()
+{
+    glEnable(GL_DEPTH_TEST);
+    // glEnable(GL_CULL_FACE); // default is glFrontFace​(GL_CCW);
+
+    loadTextures();
+    loadModels();
+
     prepareShaderProgram();
     prepareVertexBuffers();
+
+    falling.start(0);
+}
+
+void Scene::loadModels() {
+    chess.load(F(":/models/chess-one.obj"));
+
+    chessPieces.reserve(16);
+    for(int color = 0; color < 2; color++) {
+        for(int i = 0; i < 8; i++) {
+            chessPieces.append(new ChessPiece {
+                chess.beginOrder[i],
+                {i, color == 0 ? 0 : 7},
+                color
+            });
+        }
+
+        knights.append({
+            chessPieces[chessPieces.length() - 2],
+            chessPieces[chessPieces.length() - 7]
+        });
+
+        for(int i = 0; i < 8; i++) {
+            chessPieces.append(new ChessPiece {
+                chess.pawn,
+                {i, color == 0 ? 1 : 6},
+                color
+            });
+        }
+    }
 }
 
 void Scene::update(double t)
 {
-    const double speed1 = 10.0; // s / tour
-    const double speed2 = 15.0; // s / tour
-    // theta = M_PI * sinC(t / speed1); // rad
-    // angleOnGround = (t / speed2) * (2 * M_PI); // rad
     camera = lookAt + length * spherical(angleFromUp, angleOnGround);
     light = vec3(lightRadius * polar(lightInitPos + linearAngle(t * lightSpeed)), lightHeight);
 
@@ -254,6 +324,31 @@ void Scene::render()
         vPrime.lookAt(e, e + d, Z);
         pv = p * vPrime;
         camera = e;
+    }
+
+    // first, cube map
+    {
+        glDepthMask(GL_FALSE);// Remember to turn depth writing off
+
+        auto& prog = cubeMapProg;
+        auto& vao = cubeMapVAO;
+        prog.bind();
+        vao.bind();
+
+        QMatrix4x4 newView = v;
+        newView.setColumn(3, {0,0,0,1}); // remove translation
+
+        prog.setUniformValue("matrix", p * newView);
+        prog.setUniformValue("cubemap", 0);
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+
+        vao.release();
+        prog.release();
+
+        glDepthMask(GL_TRUE);
     }
 
     // surface
@@ -417,12 +512,6 @@ void Scene::render()
     }
 }
 
-void Scene::paint(QPainter& p) {
-    p.setPen(Qt::red);
-    p.setBrush(Qt::yellow);
-    p.drawRect(0, 0, 100, 100);
-}
-
 void Scene::resize(int width, int height)
 {
     glViewport(0, 0, width, height);
@@ -517,6 +606,18 @@ void Scene::prepareShaderProgram()
             qCritical() << "error in bezier shader" << prog.log(), exit(1);
     }
 
+    // cube map
+    {
+        auto& prog = cubeMapProg;
+        bool ok = true;
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/cubemap.vert"));
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/cubemap.frag"));
+        ok &= prog.link();
+
+        if(! ok)
+            qCritical() << "error in cubemap shader" << prog.log(), exit(1);
+    }
+
     glCheckError();
 }
 
@@ -567,32 +668,6 @@ void Scene::ChessObj::onloaded() {
 
 void Scene::prepareVertexBuffers()
 {
-    chess.load(F(":/models/chess-one.obj"));
-
-    chessPieces.reserve(16);
-    for(int color = 0; color < 2; color++) {
-        for(int i = 0; i < 8; i++) {
-            chessPieces.append(new ChessPiece {
-                chess.beginOrder[i],
-                {i, color == 0 ? 0 : 7},
-                color
-            });
-        }
-
-        knights.append({
-            chessPieces[chessPieces.length() - 2],
-            chessPieces[chessPieces.length() - 7]
-        });
-
-        for(int i = 0; i < 8; i++) {
-            chessPieces.append(new ChessPiece {
-                chess.pawn,
-                {i, color == 0 ? 1 : 6},
-                color
-            });
-        }
-    }
-
     // surface
     {
         auto& prog = surfProg;
@@ -715,10 +790,10 @@ void Scene::prepareVertexBuffers()
         QVector3D ds[3][6][4];
         for(int i = 0; i < 3; i++) {
             for(int j = 0; j < 6; j++) {
-                ds[i][j][0] = spherical(M_PI * (i+0) / 3, 2 * M_PI * (j+0) / 6);
-                ds[i][j][1] = spherical(M_PI * (i+0) / 3, 2 * M_PI * (j+1) / 6);
-                ds[i][j][2] = spherical(M_PI * (i+1) / 3, 2 * M_PI * (j+1) / 6);
-                ds[i][j][3] = spherical(M_PI * (i+1) / 3, 2 * M_PI * (j+0) / 6);
+                ds[i][j][0] = spherical(M_PI * (i+0) / 3, M_2PI * (j+0) / 6);
+                ds[i][j][1] = spherical(M_PI * (i+0) / 3, M_2PI * (j+1) / 6);
+                ds[i][j][2] = spherical(M_PI * (i+1) / 3, M_2PI * (j+1) / 6);
+                ds[i][j][3] = spherical(M_PI * (i+1) / 3, M_2PI * (j+0) / 6);
             }
         }
 
@@ -820,9 +895,35 @@ void Scene::prepareVertexBuffers()
         vao.release();
     }
 
-    glCheckError();
+    // cubemap
+    {
+        auto& vao = cubeMapVAO;
+        auto& prog = cubeMapProg;
+        vao.create();
+        vao.bind();
+        prog.bind();
 
-    falling.start(0);
+        GLfloat points[] = {
+            -1, 1,-1, -1,-1,-1,  1,-1,-1,  1,-1,-1,  1, 1,-1, -1, 1,-1,
+            -1,-1, 1, -1,-1,-1, -1, 1,-1, -1, 1,-1, -1, 1, 1, -1,-1, 1,
+             1,-1,-1,  1,-1, 1,  1, 1, 1,  1, 1, 1,  1, 1,-1,  1,-1,-1,
+            -1,-1, 1, -1, 1, 1,  1, 1, 1,  1, 1, 1,  1,-1, 1, -1,-1, 1,
+            -1, 1,-1,  1, 1,-1,  1, 1, 1,  1, 1, 1, -1, 1, 1, -1, 1,-1,
+            -1,-1,-1, -1,-1, 1,  1,-1,-1,  1,-1,-1, -1,-1, 1,  1,-1, 1
+        };
+
+        auto& buf = cubeMapPoints;
+        buf.create();
+        buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
+        buf.bind();
+        buf.allocate(points, sizeof(points));
+        prog.enableAttributeArray("position");
+        prog.setAttributeBuffer("position", GL_FLOAT, 0, 3);
+
+        vao.release();
+    }
+
+    glCheckError();
 }
 
 QVector3D Scene::KnightAnimation::rightVector() {
@@ -839,11 +940,11 @@ void Scene::KnightAnimation::startTo(QPoint target) {
     if(type == DEG3) {
         P[0] = vec3(vec2(fr), 0);
         P[2] = vec3(vec2(to), 0);
-        P[1] = vec3((vec2(fr) + vec2(to)) * 0.5, height);
+        P[1] = vec3((vec2(fr) + vec2(to)) * 0.5, height*2);
     } else if(type == DEG4) {
         P[0] = P[1] = vec3(vec2(fr), 0);
         P[3] = P[2] = vec3(vec2(to), 0);
-        P[1][2] = P[2][2] = height;
+        P[1][2] = P[2][2] = height*4/3;
     } else {
         P[0] = vec3(vec2(fr), 0);
         P[1] = vec3(vec2(to), 0);

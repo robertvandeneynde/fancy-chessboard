@@ -108,7 +108,7 @@ void OBJLoader::load(QString filename)
         if(parts.isEmpty()) {
 
         }
-        else if(parts[0] == "v" || parts[0] == "vn" | parts[0] == "vt") {
+        else if(parts[0] == "v" || parts[0] == "vn" || parts[0] == "vt") {
             int M = parts[0] == "vt" ? 2 : 3;
             if(parts.length() == M+1) {
                 bool ok = true;
@@ -135,23 +135,15 @@ void OBJLoader::load(QString filename)
              *  Colors parts.length() == 7 : color3f
              *  Colors parts.length() == 8 : color4f
              */
-        } else if(parts[0] == "vn") {
-            if(parts.length() == 4) {
-                bool ok = true;
-            }
-
-        } else if(parts[0] == "vt") {
-
-        } else if(parts[0] == "g") {
+        } else if(parts[0] == "g" || parts[0] == "o") {
             if(parts.length() == 2) {
                 QString name = parts[1]; // it is not whitespace
                 int n = 0;
-                while(objects.contains(name)) {
-                    ++n;
-                    name = parts[1] + "_" + QString::number(n);
-                }
+                while(objects.contains(name))
+                    name = QString("%1_%2").arg(parts[1]).arg(++n);
+
                 if(n != 0)
-                    qWarning() << (n) << "th" << parts[1] << " available as " << name;
+                    qWarning() << n << "th" << parts[1] << " available as " << name;
                 object = objects[name] = new OBJObject();
                 skipped = false;
             }

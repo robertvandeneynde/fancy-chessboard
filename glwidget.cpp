@@ -1,7 +1,6 @@
 #include "glwidget.h"
 
 #include "scene.h"
-#include "glassert.h"
 
 #include <iostream>
 
@@ -37,7 +36,7 @@ MyGLDrawer::MyGLDrawer(QWidget *parent)
 
 void MyGLDrawer::infoGL()
 {
-    glCheckError();
+    Scene::glCheckError();
 
     std::cout
         << "OpenGL infos with gl functions" << std::endl
@@ -46,7 +45,7 @@ void MyGLDrawer::infoGL()
         << "OpenGL Version : " << glGetString(GL_VERSION) << std::endl
         << "GLSL Version : " << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
 
-    glCheckError();
+    Scene::glCheckError();
 }
 
 void MyGLDrawer::printContextInfos() {

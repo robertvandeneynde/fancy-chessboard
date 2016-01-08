@@ -26,7 +26,6 @@ SOURCES += main.cpp \
     customwidgets.cpp
 
 HEADERS += \
-    glassert.h \
     utils.h \
     scene.h \
     glwidget.h \
@@ -44,7 +43,9 @@ OTHER_FILES += \
     shaders/board.frag \
     shaders/board.vert \
     shaders/bezier.frag \
-    shaders/bezier.vert
+    shaders/bezier.vert \
+    shaders/cubemap.vert \
+    shaders/cubemap.frag
 
 # RESOURCES += \
 #     resources.qrc
