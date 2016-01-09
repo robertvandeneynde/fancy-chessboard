@@ -116,8 +116,6 @@ void MyGLDrawer::mouseMoveEvent(QMouseEvent *ev) {
         */
     }
 
-    emit paramChanged();
-
     updateGL();
 }
 
@@ -132,7 +130,7 @@ void MyGLDrawer::mousePressEvent(QMouseEvent *ev) {
 }
 
 void MyGLDrawer::mouseReleaseEvent(QMouseEvent *ev) {
-
+    emit paramChanged();
 }
 
 void MyGLDrawer::keyPressEvent(QKeyEvent *ev) {

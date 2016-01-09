@@ -279,7 +279,7 @@ MainWindow::MainWindow(QWidget* parent) :
             resize(p[2], p[3]);
             move(p[0], p[1]);
         }
-        setdefault = ok;
+        setdefault = !ok;
     }
     if(setdefault) {
         showMaximized();
