@@ -4,17 +4,21 @@ uniform int color;
 uniform vec3 camera;
 
 uniform sampler2D normalMap;
+uniform samplerCube cubemap;
 uniform float shininess = 32;
 
 uniform vec3 lights[4];
 uniform vec3 lightColors[4];
 uniform int nLights = 1;
+uniform float reflectFactor = 0.2;
+uniform float refractFactor = 0.1;
+uniform float refractIndice = 0.2;
 
 in vec2 texCoord;
 in vec3 position;
 in vec3 normal;
 
-out vec3 fragColor;
+out vec4 fragColor;
 
 vec3 normalToColor(vec3 n) { return (n + 1) / 2; }
 vec3 colorToNormal(vec3 c) { return c * 2 - 1; }
@@ -45,7 +49,10 @@ void main(void)
     else
         myColor = vec3(0.8); // vec3(1,0,0); // white
 
-    fragColor = (ambiant + diffuse + specular) * myColor;
+    vec4 refl = reflectFactor * texture(cubemap, reflect(-V,N));
+    vec4 refr = refractFactor * texture(cubemap, refract(-V,N,refractIndice));
+
+    fragColor = vec4((ambiant + diffuse + specular) * myColor, 1) +  refl + refr;
     // fragColor = ((position/8)+1)/2; // normalMapVec;
     // fragColor = normalToColor(L);
 }

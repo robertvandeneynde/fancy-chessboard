@@ -86,7 +86,7 @@
         <enum>QLayout::SetNoConstraint</enum>
        </property>
        <item>
-        <widget class="QFrame" name="frame_2">
+        <widget class="QFrame" name="frame_something">
          <property name="frameShape">
           <enum>QFrame::NoFrame</enum>
          </property>
@@ -129,9 +129,9 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>1</number>
+          <number>3</number>
          </property>
-         <widget class="QWidget" name="tab_1">
+         <widget class="QWidget" name="tab_2">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -141,7 +141,7 @@
           <attribute name="title">
            <string>1</string>
           </attribute>
-          <widget class="QFrame" name="sliders">
+          <widget class="QFrame" name="frame_2">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -162,7 +162,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_3">
+           <layout class="QVBoxLayout" name="verticalLayout_2">
             <item alignment="Qt::AlignTop">
              <widget class="FormatLabel" name="toUpLabel">
               <property name="enabled">
@@ -348,7 +348,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_4">
+           <layout class="QVBoxLayout" name="verticalLayout_3">
             <property name="rightMargin">
              <number>0</number>
             </property>
@@ -570,7 +570,7 @@
            </layout>
           </widget>
          </widget>
-         <widget class="QWidget" name="tab_2">
+         <widget class="QWidget" name="tab_1">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
             <horstretch>0</horstretch>
@@ -580,7 +580,7 @@
           <attribute name="title">
            <string>3</string>
           </attribute>
-          <widget class="QFrame" name="frame">
+          <widget class="QFrame" name="frame_1">
            <property name="geometry">
             <rect>
              <x>0</x>
@@ -601,7 +601,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_2">
+           <layout class="QVBoxLayout" name="verticalLayout_1">
             <property name="rightMargin">
              <number>0</number>
             </property>
@@ -729,14 +729,6 @@
            <string>4</string>
           </attribute>
           <widget class="QFrame" name="frame_4">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>121</width>
-             <height>197</height>
-            </rect>
-           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -749,7 +741,7 @@
            <property name="frameShadow">
             <enum>QFrame::Raised</enum>
            </property>
-           <layout class="QVBoxLayout" name="verticalLayout_5">
+           <layout class="QVBoxLayout" name="verticalLayout_4">
             <property name="rightMargin">
              <number>0</number>
             </property>
@@ -870,6 +862,183 @@
               </property>
               <property name="value">
                <number>15</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="startingHeightLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Average starting height of pieces.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>h0 = %1m</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="startingHeight">
+              <property name="minimum">
+               <number>10</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>50</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+         <widget class="QWidget" name="tab_5">
+          <attribute name="title">
+           <string>5</string>
+          </attribute>
+          <widget class="QFrame" name="frame_5">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>121</width>
+             <height>197</height>
+            </rect>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="frameShape">
+            <enum>QFrame::NoFrame</enum>
+           </property>
+           <property name="frameShadow">
+            <enum>QFrame::Raised</enum>
+           </property>
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="FormatLabel" name="reflectKLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Factor of reflection&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>reflect-k: %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="reflectK">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>200</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="refractKLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Factor of refraction&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>refrac-k = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="refractK">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>200</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="refractIndiceLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;refractIndice between the two materials&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>refract-n = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="refractIndice">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>300</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>140</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="cubemapTextureLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Texture used for cubemap&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>texture #%1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="cubemapTexture">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>7</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>5</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>

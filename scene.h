@@ -71,6 +71,19 @@ public:
         }
     } lightColorsParam;
 
+    struct {
+        int v = 0;
+
+        operator int(){
+            return v;
+        }
+
+        void operator =(int x){
+            auto N = NCUBEMAP;
+            v = (x % N + N) % N;
+        }
+    } currentCubeMap;
+
 private:
     QOpenGLShaderProgram surfProg, lightProg, chessProg, boardProg, bezierProg, cubeMapProg;
 
@@ -79,8 +92,19 @@ private:
         surfVertexBuf, surfNormalBuf, surfColorBuf, surfTexcoordBuf,
         lampCubeBuf, boardVertexBuffer, bezierPoints, cubeMapPoints;
 
+    static const int NCUBEMAP = 7;
+    QString cubeMapFilenames[NCUBEMAP] = {
+        "ame_desert/%1.png",
+        "highqual/Park2/%1.jpg",
+        "highqual/SwedishRoyalCastle/%1.jpg",
+        "highqual/Vasa/%1.jpg",
+        "highqual/Creek/%1.jpg",
+        "skybox/%1.jpg",
+        "lmcity/%1.png",
+    };
+
     QScopedPointer<QOpenGLTexture>
-        texTriangles, texTriangleBump, texBoardNormalMap, cubeMapTexture;
+        texTriangles, texTriangleBump, texBoardNormalMap, cubeMapTextures[NCUBEMAP];
 
     struct ChessObj : public OBJLoader {
         typedef OBJObject *OBJObjectPtr;
@@ -106,6 +130,9 @@ private:
 public:
     int nLights = 1;
     QVector3D lookAt;
+    float reflectFactor = 0.2;
+    float refractFactor = 0.1;
+    float refractIndice = 0.2;
 
 private:
     QVector3D & light = lights[0].pos;
@@ -212,6 +239,7 @@ public:
         float g = 10.0;
         float k = 60;
         float alpha = 3;
+        float startingHeight = 5;
 
         float firstT = 0, lastT = 0;
 
@@ -224,8 +252,8 @@ public:
             running = true;
             firstT = lastT = t;
             for(ChessPiece* obj : scene->chessPieces) {
-                float random = rand() % 10 / 10.0;
-                positions.append(5 + random * 1.50 + obj->type->geom.size.z());
+                float random = rand() / (float)RAND_MAX;
+                positions.append(startingHeight + random * 1.50 + obj->type->geom.size.z());
                 velocities.append(0);
                 masses.append(rho * obj->type->geom.size.x() * obj->type->geom.size.y() * obj->type->geom.size.z());
             }

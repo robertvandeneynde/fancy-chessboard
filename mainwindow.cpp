@@ -109,11 +109,16 @@ MainWindow::MainWindow(QWidget* parent) :
 
     const float RPM = 1 / 60.0,
                 ANGLE = radians(1),
+                CM = 1/100.0,
                 DM = 1/10.0;
 
     auto decimalFormat = [](QString f, int x){
         return x >= 0 ? f.arg(QString("%1.%2").arg(x/10).arg(x%10)) :
                       f.arg(QString("-%1.%2").arg((-x)/10).arg((-x)%10));
+    };
+    auto cmFormat = [](QString f, int x){
+        return x >= 0 ? f.arg(QString("%1.%2").arg(x/100).arg(x%100, 2, 10, QChar('0'))) :
+                      f.arg(QString("-%1.%2").arg((-x)/100).arg((-x)%100, 2, 10, QChar('0')));
     };
     Scene* scene = getScene();
 
@@ -150,6 +155,9 @@ MainWindow::MainWindow(QWidget* parent) :
     mapvari::linear(scene->falling.alpha, ui->fallingAlpha, DM);
     ui->fallingAlphaLabel->setFunc(decimalFormat);
 
+    mapvari::linear(scene->falling.startingHeight, ui->startingHeight, DM);
+    ui->startingHeightLabel->setFunc(decimalFormat);
+
     mapvari::linear(scene->falling.g, ui->fallingGravity);
     mapvari::linear(scene->falling.k, ui->fallingK);
     mapvari::general(scene->falling.timeCutOff, ui->fallingMaxT, [this](int x){
@@ -158,6 +166,14 @@ MainWindow::MainWindow(QWidget* parent) :
     ui->fallingMaxTLabel->setFunc([this](QString s, int x) -> QString {
         return x == ui->fallingMaxT->maximum() ? s.arg("∞") : s.arg(x);
     });
+
+    mapvari::linear(scene->reflectFactor, ui->reflectK, CM);
+    ui->reflectKLabel->setFunc(cmFormat);
+    mapvari::linear(scene->refractFactor, ui->refractK, CM);
+    ui->refractKLabel->setFunc(cmFormat);
+    mapvari::linear(scene->refractIndice, ui->refractIndice, CM);
+    ui->refractIndiceLabel->setFunc(cmFormat);
+    mapvari::general(scene->currentCubeMap, ui->cubemapTexture);
 
     connect(ui->buttonBoing, &QPushButton::clicked, [this, scene](){
         scene->falling.start(ui->gl->currentTime());

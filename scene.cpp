@@ -97,11 +97,12 @@ void Scene::loadTextures() {
         ++i;
     }
 
+    for(int n = 0; n < NCUBEMAP; n++)
     {
 
-        cubeMapTexture.reset(new QOpenGLTexture(QOpenGLTexture::TargetCubeMap));
-        cubeMapTexture->create();
-        cubeMapTexture->bind();
+        cubeMapTextures[n].reset(new QOpenGLTexture(QOpenGLTexture::TargetCubeMap));
+        cubeMapTextures[n]->create();
+        cubeMapTextures[n]->bind();
         /*
         glGenTextures(1, &cubeMapTexture);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
@@ -121,10 +122,10 @@ void Scene::loadTextures() {
 
             for(QStringList l: names)
                 if(image.isNull())
-                    image.load(F(":/textures/skybox/%1.jpg").arg(l[i]));
+                    image.load(F(":/textures/") + QString(cubeMapFilenames[n]).arg(l[i]));
 
             if(image.isNull()) {
-                qCritical() << "Error loading cubemap " << names[2][i];
+                qCritical() << "Error loading cubemap " << (n+1) << "th cube map face " << names[0][i] << "(" << names[2][i] << ")";
                 exit(1); // two lines to flush the qCritical buffer !
             }
 
@@ -150,10 +151,9 @@ void Scene::initialize()
     glEnable(GL_DEPTH_TEST);
     // glEnable(GL_CULL_FACE); // default is glFrontFace​(GL_CCW);
 
+    prepareShaderProgram();
     loadTextures();
     loadModels();
-
-    prepareShaderProgram();
     prepareVertexBuffers();
 
     falling.start(0);
@@ -315,10 +315,11 @@ void Scene::render()
 
     auto pv = p * v;
 
+    QMatrix4x4 vPrime = v;
+
     if(onKnightAnim.isRunning && anim.piece) {
         auto T = vec2(anim.to - anim.fr).normalized();
         auto R = anim.rightVector();
-        QMatrix4x4 vPrime;
         auto t = anim.piece->type;
         auto H = t->geom.size.z();
         auto e = A1Coord + -T*0.2 + anim.pos3D + Z * (t == chess.knight ? 2 : H + 0.5 );
@@ -329,6 +330,7 @@ void Scene::render()
         // dt.rotate(5 * std::sin(2 * 2 * M_PI * anim.elapsed / anim.duration), Z);
         dt.rotate(degrees(onKnightAnim.inclinaison), R);
         d = dt.mapVector(d);
+        vPrime.setToIdentity();
         vPrime.lookAt(e, e + d, Z);
         pv = p * vPrime;
         camera = e;
@@ -343,14 +345,14 @@ void Scene::render()
         prog.bind();
         vao.bind();
 
-        QMatrix4x4 newView = v;
+        QMatrix4x4 newView = vPrime;
         newView.setColumn(3, {0,0,0,1}); // remove translation
 
         prog.setUniformValue("matrix", p * newView);
         prog.setUniformValue("cubemap", 0);
 
         glActiveTexture(GL_TEXTURE0);
-        cubeMapTexture->bind(0);
+        cubeMapTextures[currentCubeMap]->bind(0);
         glDrawArrays(GL_QUADS, 0, 6 * 4);
 
         vao.release();
@@ -477,6 +479,11 @@ void Scene::render()
 
         texBoardNormalMap->bind(0); // texture unit 0
         prog.setUniformValue("normalMap", 0);
+        cubeMapTextures[currentCubeMap]->bind(1);
+        prog.setUniformValue("cubemap", 1);
+        prog.setUniformValue("reflectFactor", reflectFactor);
+        prog.setUniformValue("refractFactor", refractFactor);
+        prog.setUniformValue("refractIndice", refractIndice);
 
         for(int i = 0; i < 8; i++) {
             for(int j = 0; j < 8; j++) {
