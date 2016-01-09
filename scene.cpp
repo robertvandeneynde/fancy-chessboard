@@ -86,8 +86,10 @@ void Scene::loadTextures() {
     for(QScopedPointer<QOpenGLTexture>* tt : {&texTriangles, &texTriangleBump, &texBoardNormalMap}) {
         QImage image(files[i]);
 
-        if(image.isNull())
-            qCritical() << "Error loading texture " << files[i], exit(1);
+        if(image.isNull()) {
+            qCritical() << "Error loading texture " << files[i];
+            exit(1); // two lines to flush the qCritical buffer !
+        }
 
         tt->reset(new QOpenGLTexture(image));
         (*tt)->setMinificationFilter(QOpenGLTexture::LinearMipMapLinear);
@@ -96,36 +98,42 @@ void Scene::loadTextures() {
     }
 
     {
-        // cubeMapTexture.reset(new QOpenGLTexture(QOpenGLTexture::TargetCubeMap));
-        // auto& self = *cubeMapTexture;
+
+        cubeMapTexture.reset(new QOpenGLTexture(QOpenGLTexture::TargetCubeMap));
+        cubeMapTexture->create();
+        cubeMapTexture->bind();
+        /*
         glGenTextures(1, &cubeMapTexture);
         glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
+        */
+
+        QList<QStringList> names = {
+            {"1", "2", "3", "4", "5", "6"},
+            {"x", "-x", "y", "-y", "z", "-z"},
+            {"+x", "-x", "+y", "-y", "+z", "-z"},
+            {"right", "left", "back", "front", "up", "down"},
+            {"right", "left", "back", "front", "top", "bottom"},
+            {"R", "L", "B", "F", "U", "D"}, // rubix
+        };
 
         for(int i = 0; i < 6; i++) {
-            QImage image(F(":/textures/cubemap/%1.png").arg(i));
+            QImage image;
 
-            QOpenGLTexture::CubeMapFace cubeFace = (QOpenGLTexture::CubeMapFace)(QOpenGLTexture::CubeMapPositiveX + i);
-            if(image.isNull())
-                qCritical() << "Error loading cubemap" << i, exit(1);
+            for(QStringList l: names)
+                if(image.isNull())
+                    image.load(F(":/textures/skybox/%1.jpg").arg(l[i]));
 
-            // from source of setData(QImage); http://osxr.org/qt/source/qtbase/src/gui/opengl/qopengltexture.cpp
+            if(image.isNull()) {
+                qCritical() << "Error loading cubemap " << names[2][i];
+                exit(1); // two lines to flush the qCritical buffer !
+            }
 
-            /*
-            self.setFormat(QOpenGLTexture::RGBA8_UNorm);
-            self.setSize(image.width(), image.height());
-            self.setMipLevels(self.maximumMipLevels()); // by default generate mip map
-            self.allocateStorage();
-
-            // Upload pixel data and generate mipmaps
-            QImage glImage = image.convertToFormat(QImage::Format_RGBA8888);
-            QOpenGLPixelTransferOptions uploadOptions;
-            uploadOptions.setAlignment(1);
-            self.setData(0, 0, cubeFace, QOpenGLTexture::RGBA, QOpenGLTexture::UInt8, glImage.bits(), &uploadOptions);
-            */
+            image = image.mirrored(); // opengl convention y to up
 
             QImage glImage = image.convertToFormat(QImage::Format_RGBA8888);
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, glImage.width(), glImage.height(), 0, GL_RGBA, GL_UNSIGNED_BYTE, glImage.bits());
         }
+
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -342,8 +350,8 @@ void Scene::render()
         prog.setUniformValue("cubemap", 0);
 
         glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, cubeMapTexture);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        cubeMapTexture->bind(0);
+        glDrawArrays(GL_QUADS, 0, 6 * 4);
 
         vao.release();
         prog.release();
@@ -546,77 +554,25 @@ void Scene::prepareShaderProgram()
     // create the shader (glCreateShader(&shaderId, type))
     // then attach the shader (glAttachShader(programId, shaderId)
 
-    // surface
-    {
-        auto& prog = surfProg;
+    auto readPair = [](QOpenGLShaderProgram & prog, QString basename) {
         bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":/shaders/surf.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":/shaders/surf.frag"));
+
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":/shaders/%1.vert").arg(basename));
+        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":/shaders/%1.frag").arg(basename));
         ok &= prog.link(); // glLinkProgram(programId)
 
-        if(! ok)
-            qCritical() << "error in surface shader" << prog.log(), exit(1);
-    }
+        if(! ok) {
+            qCritical() << "error in a shader" << prog.log();
+            exit(1);
+        }
+    };
 
-    // lamp
-    {
-        auto& prog = lightProg;
-        bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/light.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/light.frag"));
-        ok &= prog.link();
-
-        if(! ok)
-            qCritical() << "error in light shader" << prog.log(), exit(1);
-    }
-
-    // chess
-    {
-        auto& prog = chessProg;
-        bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/chess.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/chess.frag"));
-        ok &= prog.link();
-
-        if(! ok)
-            qCritical() << "error in chess shader" << prog.log(), exit(1);
-    }
-
-    // board
-    {
-        auto& prog = boardProg;
-        bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/board.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/board.frag"));
-        ok &= prog.link();
-
-        if(! ok)
-            qCritical() << "error in board shader" << prog.log(), exit(1);
-    }
-
-    // bezier
-    {
-        auto& prog = bezierProg;
-        bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/bezier.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/bezier.frag"));
-        ok &= prog.link();
-
-        if(! ok)
-            qCritical() << "error in bezier shader" << prog.log(), exit(1);
-    }
-
-    // cube map
-    {
-        auto& prog = cubeMapProg;
-        bool ok = true;
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Vertex, F(":shaders/cubemap.vert"));
-        ok &= prog.addShaderFromSourceFile(QOpenGLShader::Fragment, F(":shaders/cubemap.frag"));
-        ok &= prog.link();
-
-        if(! ok)
-            qCritical() << "error in cubemap shader" << prog.log(), exit(1);
-    }
+    readPair(surfProg, "surf");
+    readPair(lightProg, "light");
+    readPair(chessProg, "chess");
+    readPair(boardProg, "board");
+    readPair(bezierProg, "bezier");
+    readPair(cubeMapProg, "cubemap");
 
     glCheckError();
 }
@@ -903,20 +859,23 @@ void Scene::prepareVertexBuffers()
         vao.bind();
         prog.bind();
 
-        GLfloat points[] = {
-            -1, 1,-1, -1,-1,-1,  1,-1,-1,  1,-1,-1,  1, 1,-1, -1, 1,-1,
-            -1,-1, 1, -1,-1,-1, -1, 1,-1, -1, 1,-1, -1, 1, 1, -1,-1, 1,
-             1,-1,-1,  1,-1, 1,  1, 1, 1,  1, 1, 1,  1, 1,-1,  1,-1,-1,
-            -1,-1, 1, -1, 1, 1,  1, 1, 1,  1, 1, 1,  1,-1, 1, -1,-1, 1,
-            -1, 1,-1,  1, 1,-1,  1, 1, 1,  1, 1, 1, -1, 1, 1, -1, 1,-1,
-            -1,-1,-1, -1,-1, 1,  1,-1,-1,  1,-1,-1, -1,-1, 1,  1,-1, 1
-        };
+        QVector<GLfloat> points;
+
+        for(char c: (
+            "++-" "+--" "---" "-+-" // bottom
+            "--+" "-++" "-+-" "---" // left
+            "+++" "++-" "+--" "+-+" // right
+            "--+" "-++" "+++" "+-+" // up
+            "+++" "++-" "-+-" "-++" // back
+            "+-+" "--+" "---" "+--" // front
+        ))
+            points.append(c == '+' ? +1 : -1);
 
         auto& buf = cubeMapPoints;
         buf.create();
         buf.setUsagePattern(QOpenGLBuffer::StaticDraw);
         buf.bind();
-        buf.allocate(points, sizeof(points));
+        buf.allocate(points.data(), points.length() * sizeof(GLfloat));
         prog.enableAttributeArray("position");
         prog.setAttributeBuffer("position", GL_FLOAT, 0, 3);
 

@@ -80,8 +80,7 @@ private:
         lampCubeBuf, boardVertexBuffer, bezierPoints, cubeMapPoints;
 
     QScopedPointer<QOpenGLTexture>
-        texTriangles, texTriangleBump, texBoardNormalMap;
-    GLuint cubeMapTexture;
+        texTriangles, texTriangleBump, texBoardNormalMap, cubeMapTexture;
 
     struct ChessObj : public OBJLoader {
         typedef OBJObject *OBJObjectPtr;
