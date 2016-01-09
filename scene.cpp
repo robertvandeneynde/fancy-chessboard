@@ -36,8 +36,8 @@ Scene::Scene()
     srand(time(0));
     lightColorsParam.scene = this;
     length = 3;
-    angleFromUp = radians(60);
-    angleOnGround = radians(225); // theta is 2D angle, phi is 3D
+    angleFromUp = radians(60); // math-phi / 3D angle
+    angleOnGround = radians(225); // math-theta / 2D angle / azimutal
 
     lightSpeed = 1; // seconds / turn
 

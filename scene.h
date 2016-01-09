@@ -35,8 +35,8 @@ public slots:
 
 public:
     float length = 3;
-    float angleFromUp = radians(60);
-    float angleOnGround = radians(225); // theta is 2D angle, phi is 3D
+    float angleFromUp = radians(60); // math-phi / 3D angle
+    float angleOnGround = radians(225); // math-theta / 2D angle / azimutal
 
     float lightHeight = 1;
     float lightRadius = 1;
@@ -57,17 +57,21 @@ public:
             scene->lights[1].color = vColor(scene->possibleColors[x % C]);
             scene->lights[2].color = vColor(scene->possibleColors[x / C % C]);
             // f(i=0) = x % C, f(1) = x / C % C, f(2) = x / C / C % C, f(3) = x / C / C / C % C, f(i) = x / C**i % C
+            // for(int i = 0, b = x; i < 2; i++, b /= C)
+            //     scene->lights[i+1].color = vColor(scene->possibleColors[b % C]);
         }
 
         operator int() {
             if(! scene)
                 return 0;
             int C = scene->possibleColors.length();
-            int a = scene->possibleColors.indexOf(color3(scene->lights[1].color));
-            int b = scene->possibleColors.indexOf(color3(scene->lights[2].color));
-            if(a == -1 || b == -1)
-                return 0;
-            return a * C + b;
+            int x[2]; // x[lights.length()]
+            for(int i = 0; i < 2; i++) {
+                x[i] = scene->possibleColors.indexOf(color3(scene->lights[i+1].color));
+                if(x[i] == -1)
+                    return 0;
+            }
+            return x[0] * C + x[1]; // x dot (..., C ** 3, C ** 2, C, 1)
         }
     } lightColorsParam;
 
