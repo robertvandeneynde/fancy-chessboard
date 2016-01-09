@@ -129,7 +129,7 @@
           </sizepolicy>
          </property>
          <property name="currentIndex">
-          <number>3</number>
+          <number>1</number>
          </property>
          <widget class="QWidget" name="tab_2">
           <property name="sizePolicy">
@@ -328,14 +328,6 @@
            <string>2</string>
           </attribute>
           <widget class="QFrame" name="frame_3">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>120</width>
-             <height>309</height>
-            </rect>
-           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>
@@ -554,13 +546,100 @@
                <number>0</number>
               </property>
               <property name="maximum">
-               <number>10</number>
+               <number>15</number>
               </property>
               <property name="pageStep">
                <number>1</number>
               </property>
               <property name="value">
                <number>5</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="lightingModelLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Phong|Bling-Phong|Cook-Torrance&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>model = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="lightingModel">
+              <property name="minimum">
+               <number>0</number>
+              </property>
+              <property name="maximum">
+               <number>2</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>0</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="cookRoughnessLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;cookRoughness&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>cook-rough = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="cookRoughness">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>200</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>20</number>
+              </property>
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="FormatLabel" name="cookLambdaLabel">
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;cookRoughness&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>cook-λ = %1</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSlider" name="cookLambda">
+              <property name="minimum">
+               <number>1</number>
+              </property>
+              <property name="maximum">
+               <number>100</number>
+              </property>
+              <property name="pageStep">
+               <number>1</number>
+              </property>
+              <property name="value">
+               <number>40</number>
               </property>
               <property name="orientation">
                <enum>Qt::Horizontal</enum>
@@ -729,6 +808,14 @@
            <string>4</string>
           </attribute>
           <widget class="QFrame" name="frame_4">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>103</width>
+             <height>237</height>
+            </rect>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
              <horstretch>0</horstretch>

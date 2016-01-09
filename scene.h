@@ -134,6 +134,10 @@ public:
     float refractFactor = 0.1;
     float refractIndice = 0.2;
 
+    float cookLambda = 0.4;
+    float cookRoughness = 0.2;
+    int lightingModel = 0; // PHONG BLING-PHONG COOK
+
 private:
     QVector3D & light = lights[0].pos;
 

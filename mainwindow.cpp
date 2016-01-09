@@ -112,7 +112,7 @@ MainWindow::MainWindow(QWidget* parent) :
                 CM = 1/100.0,
                 DM = 1/10.0;
 
-    auto decimalFormat = [](QString f, int x){
+    auto dmFormat = [](QString f, int x){
         return x >= 0 ? f.arg(QString("%1.%2").arg(x/10).arg(x%10)) :
                       f.arg(QString("-%1.%2").arg((-x)/10).arg((-x)%10));
     };
@@ -126,10 +126,10 @@ MainWindow::MainWindow(QWidget* parent) :
     mapvari::linear(scene->lightRadius, ui->lightRadius, DM);
     mapvari::linear(scene->lookAt[0], ui->panX, DM);
     mapvari::linear(scene->lookAt[1], ui->panY, DM);
-    ui->lightHeightLabel->setFunc(decimalFormat);
-    ui->lightRadiusLabel->setFunc(decimalFormat);
-    ui->panXLabel->setFunc(decimalFormat);
-    ui->panYLabel->setFunc(decimalFormat);
+    ui->lightHeightLabel->setFunc(dmFormat);
+    ui->lightRadiusLabel->setFunc(dmFormat);
+    ui->panXLabel->setFunc(dmFormat);
+    ui->panYLabel->setFunc(dmFormat);
 
     mapvari::linear(scene->lightSpeed, ui->lightSpeed, RPM);
     mapvari::linear(scene->lightInitPos, ui->lightInitPos, ANGLE);
@@ -138,25 +138,35 @@ MainWindow::MainWindow(QWidget* parent) :
     mapvari::linear(scene->angleOnGround, ui->onGround, ANGLE);
 
     mapvari::linear(scene->length, ui->cameraR, DM);
-    ui->cameraRLabel->setFunc(decimalFormat);
+    ui->cameraRLabel->setFunc(dmFormat);
 
     mapvari::expo(scene->chessShininess, ui->shininess, 2.f);
+    mapvari::linear(scene->cookLambda, ui->cookLambda, CM);
+    ui->cookLambdaLabel->setFunc(cmFormat);
+    mapvari::linear(scene->cookRoughness, ui->cookRoughness, CM);
+    ui->cookRoughnessLabel->setFunc(cmFormat);
 
     mapvari::linear(scene->anim.duration, ui->animDuration, DM);
-    ui->animDurationLabel->setFunc(decimalFormat);
+    ui->animDurationLabel->setFunc(dmFormat);
 
     mapvari::linear(scene->movementWaiting, ui->movementWaiting, DM);
-    ui->movementWaitingLabel->setFunc(decimalFormat);
+    ui->movementWaitingLabel->setFunc(dmFormat);
 
     mapvari::general(scene->lightColorsParam, ui->lightColors);
     mapvari::general(scene->anim.mode, ui->animMode);
     mapvari::general(scene->onKnightAnim.setRunning, ui->animOnKnight);
 
     mapvari::linear(scene->falling.alpha, ui->fallingAlpha, DM);
-    ui->fallingAlphaLabel->setFunc(decimalFormat);
+    ui->fallingAlphaLabel->setFunc(dmFormat);
 
     mapvari::linear(scene->falling.startingHeight, ui->startingHeight, DM);
-    ui->startingHeightLabel->setFunc(decimalFormat);
+    ui->startingHeightLabel->setFunc(dmFormat);
+
+    mapvari::linear(scene->lightingModel, ui->lightingModel);
+    ui->lightingModelLabel->setFunc([](QString f, int x){
+        const char* values[] = {"Phong", "Bling", "Cook"};
+        return f.arg(values[x]);
+    });
 
     mapvari::linear(scene->falling.g, ui->fallingGravity);
     mapvari::linear(scene->falling.k, ui->fallingK);

@@ -422,6 +422,9 @@ void Scene::render()
         prog.setUniformValue("light", light);
         prog.setUniformValue("camera", camera);
         prog.setUniformValue("shininess", chessShininess);
+        prog.setUniformValue("cookRoughness", cookRoughness);
+        prog.setUniformValue("cookLambda", cookLambda);
+        prog.setUniformValue("lightingModel", (int)lightingModel);
 
         int ip = 0;
         for(ChessPiece* p : chessPieces) {
